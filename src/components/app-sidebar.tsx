@@ -7,7 +7,7 @@ import {
   LayoutDashboard, FileText, History, BarChart3, Users, ShieldCheck,
   Settings, LogOut, UserCog, Sparkles,
 } from "lucide-react";
-import atsLogo from "@/assets/ats-logo.png";
+import atsLogoAsset from "@/assets/ats-logo.png.asset.json";
 import { useMe } from "./app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { primaryRole, ROLE_LABEL } from "@/lib/roles";
@@ -44,8 +44,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="border-b border-sidebar-border/50">
         <div className="flex items-center gap-3 px-2 py-3">
-          <div className="h-10 w-10 shrink-0 rounded-xl grid place-items-center overflow-hidden bg-sidebar-accent">
-            <img src={atsLogo} alt="" width={40} height={40} className="object-contain" />
+          <div className="h-11 w-11 shrink-0 rounded-xl grid place-items-center overflow-hidden bg-white shadow-[0_4px_16px_-4px_rgba(0,0,0,0.4)] ring-1 ring-white/10">
+            <img src={atsLogoAsset.url} alt="ATS Logo" width={40} height={40} className="object-contain" />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="font-bold tracking-tight text-white text-sm truncate">ATS TRACK RH</div>
