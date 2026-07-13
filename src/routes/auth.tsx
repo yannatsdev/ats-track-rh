@@ -61,7 +61,44 @@ function AuthPage() {
 
   return (
     <div className="min-h-[100dvh] w-full grid lg:grid-cols-[1.05fr_1fr] bg-background">
-      {/* LEFT — Editorial hero */}
+      {/* MOBILE hero band */}
+      <div className="relative lg:hidden h-[280px] sm:h-[340px] overflow-hidden">
+        <img
+          src={authHero.url}
+          alt="Professionnelle Africa Talent Solution"
+          className="absolute inset-0 h-full w-full object-cover object-top"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(160deg, oklch(0.24 0.03 262 / 0.82) 0%, oklch(0.30 0.05 260 / 0.55) 50%, oklch(0.78 0.14 78 / 0.35) 100%)",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+        <div className="relative z-10 flex h-full flex-col justify-between p-6 text-white">
+          <div className="flex items-center gap-3">
+            <div className="h-14 w-14 rounded-2xl bg-white grid place-items-center shadow-xl ring-2 ring-white/40 p-1.5">
+              <img src={atsLogoAsset.url} alt="ATS" className="h-full w-full object-contain" />
+            </div>
+            <div>
+              <div className="font-bold text-base tracking-tight">ATS TRACK RH</div>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-white/70">Africa Talent Solution</div>
+            </div>
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 px-2.5 py-1 text-[11px] font-medium mb-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Plateforme RH nouvelle génération
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight max-w-[20ch]">
+              Le suivi RH <span className="italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>réinventé</span>.
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      {/* LEFT hero (desktop) */}
       <div className="relative hidden lg:block overflow-hidden">
         <img
           src={authHero.url}
@@ -80,11 +117,11 @@ function AuthPage() {
 
         <div className="relative z-10 flex h-full flex-col justify-between p-12 text-white">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-white grid place-items-center shadow-xl">
-              <img src={atsLogoAsset.url} alt="ATS" width={40} height={40} className="object-contain" />
+            <div className="h-16 w-16 rounded-2xl bg-white grid place-items-center shadow-2xl ring-2 ring-white/40 p-2">
+              <img src={atsLogoAsset.url} alt="ATS" className="h-full w-full object-contain" />
             </div>
             <div>
-              <div className="font-bold text-base tracking-tight">ATS TRACK RH</div>
+              <div className="font-bold text-lg tracking-tight">ATS TRACK RH</div>
               <div className="text-[11px] uppercase tracking-[0.14em] text-white/70">Africa Talent Solution</div>
             </div>
           </div>
@@ -113,17 +150,6 @@ function AuthPage() {
       {/* RIGHT — Form */}
       <div className="flex items-center justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
-          {/* Mobile brand */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="h-11 w-11 rounded-xl bg-card border grid place-items-center shadow-sm">
-              <img src={atsLogoAsset.url} alt="" width={36} height={36} className="object-contain" />
-            </div>
-            <div>
-              <div className="font-bold text-sm tracking-tight">ATS TRACK RH</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Africa Talent Solution</div>
-            </div>
-          </div>
-
           <div className="mb-8">
             <h2 className="text-4xl font-bold tracking-tight" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
               {mode === "signin" ? "Bon retour parmi nous" : "Créer votre compte"}
