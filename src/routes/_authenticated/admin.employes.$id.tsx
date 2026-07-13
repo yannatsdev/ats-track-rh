@@ -42,7 +42,7 @@ function EmpSheet() {
     await qc.invalidateQueries({ queryKey: ["admin-sheet", id] });
   }
 
-  const { sheet, entries, profile, validations } = data;
+  const { sheet, entries, profile, validations, dayNotes } = data;
   const canHR = me.roles.includes("hr") || me.roles.includes("admin");
   const canDir = me.roles.includes("direction") || me.roles.includes("admin");
 
@@ -59,10 +59,18 @@ function EmpSheet() {
         {DAY_LABELS.map((d, i) => {
           const day = i + 1;
           const de = entries.filter((e) => e.day === day);
-          if (de.length === 0) return null;
+          const note = (dayNotes ?? []).find((n) => n.day === day);
+          if (de.length === 0 && !note) return null;
           return (
             <Card key={d} className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)]">
-              <div className="font-semibold mb-3">{d}</div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-semibold">{d}</div>
+                {note && (
+                  <div className="text-xs text-muted-foreground">
+                    Avancement du jour : <span className="font-semibold text-primary">{note.avancement_pct}%</span>
+                  </div>
+                )}
+              </div>
               <div className="space-y-2">
                 {de.map((e) => (
                   <div key={e.id} className="grid grid-cols-[80px_1fr_1fr_auto] gap-3 items-center py-2 border-t first:border-0">
@@ -73,6 +81,28 @@ function EmpSheet() {
                   </div>
                 ))}
               </div>
+              {note && (note.motif_report || note.difficultes || note.observations) && (
+                <div className="grid gap-3 md:grid-cols-3 mt-4 pt-4 border-t text-sm">
+                  {note.motif_report && (
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Motif du report</div>
+                      <div>{note.motif_report}</div>
+                    </div>
+                  )}
+                  {note.difficultes && (
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Difficultés</div>
+                      <div>{note.difficultes}</div>
+                    </div>
+                  )}
+                  {note.observations && (
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Observations</div>
+                      <div>{note.observations}</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           );
         })}
