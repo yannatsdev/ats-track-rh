@@ -125,11 +125,12 @@ function AdminLoginPage() {
       <div className="flex items-center justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
           <div className="mb-8 lg:hidden">
-            <div className="relative h-44 sm:h-56 w-full overflow-hidden rounded-3xl shadow-[var(--shadow-card)]">
+            <div className="relative h-64 sm:h-80 w-full overflow-hidden rounded-3xl shadow-[var(--shadow-card)]">
               <img
                 src={authHero.url}
                 alt="Administration ATS TRACK RH"
                 className="absolute inset-0 h-full w-full object-cover"
+                style={{ objectPosition: "center 20%" }}
               />
               <div
                 className="absolute inset-0"
