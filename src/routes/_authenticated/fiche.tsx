@@ -1,0 +1,231 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
+import { PageHeader } from "@/components/page-header";
+import { StatusBadge, type Statut } from "@/components/status-badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Plus, Trash2, Check, Send, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet,
+} from "@/lib/sheets.functions";
+import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
+
+export const Route = createFileRoute("/_authenticated/fiche")({
+  head: () => ({ meta: [{ title: "Fiche de la semaine — ATS TRACK RH" }] }),
+  component: FichePage,
+});
+
+type Entry = {
+  id?: string; sheet_id: string; day: number; heure: string; tache: string;
+  resultat: string; statut: Statut; motif_report: string; avancement_pct: number; position: number;
+};
+
+function FichePage() {
+  const qc = useQueryClient();
+  const weekStart = isoWeekStart();
+  const getSheet = useServerFn(getOrCreateCurrentSheet);
+  const upsert = useServerFn(upsertDailyEntry);
+  const remove = useServerFn(deleteDailyEntry);
+  const update = useServerFn(updateSheet);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["current-sheet", weekStart],
+    queryFn: () => getSheet({ data: { weekStart } }),
+  });
+
+  const [activeDay, setActiveDay] = useState("1");
+  const [saving, setSaving] = useState(false);
+
+  const entries = ((data?.entries ?? []) as unknown as Entry[]);
+  const sheet = data?.sheet;
+
+  const completion = useMemo(() => {
+    if (!entries.length) return 0;
+    return Math.round(entries.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / entries.length);
+  }, [entries]);
+
+  const dayComplete = (d: number) => entries.some((e) => e.day === d && e.tache.trim().length > 0);
+
+  async function addRow(day: number) {
+    if (!sheet) return;
+    setSaving(true);
+    try {
+      await upsert({ data: {
+        sheet_id: sheet.id, day, heure: "", tache: "Nouvelle tâche", resultat: "",
+        statut: "in_progress", motif_report: "", avancement_pct: 0,
+        position: entries.filter((e) => e.day === day).length,
+      }});
+      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+    } finally { setSaving(false); }
+  }
+
+  async function saveEntry(entry: Entry) {
+    setSaving(true);
+    try {
+      await upsert({ data: entry });
+      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  async function deleteRow(id?: string) {
+    if (!id) return;
+    await remove({ data: { id } });
+    await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+  }
+
+  async function submitSheet() {
+    if (!sheet) return;
+    await update({ data: { id: sheet.id, avancement_global: completion, status: "submitted" } });
+    toast.success("Fiche soumise pour validation");
+    await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+  }
+
+  if (isLoading || !sheet) {
+    return <div className="grid place-items-center h-64"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  }
+  const submitted = sheet.status !== "draft";
+
+  return (
+    <div>
+      <PageHeader
+        title="Fiche de la semaine"
+        subtitle={`Semaine du ${formatWeekRange(weekStart)} · ${entries.length} tâches`}
+        actions={
+          <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
+            <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre"}
+          </Button>
+        }
+      />
+
+      <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm font-medium">Progression globale de la semaine</div>
+          <div className="text-sm font-bold text-primary">{completion}%</div>
+        </div>
+        <Progress value={completion} className="h-2" />
+      </Card>
+
+      <Tabs value={activeDay} onValueChange={setActiveDay}>
+        <TabsList className="grid grid-cols-5 h-auto p-1 bg-secondary rounded-2xl">
+          {DAY_LABELS.map((d, i) => {
+            const done = dayComplete(i + 1);
+            return (
+              <TabsTrigger key={d} value={String(i + 1)}
+                className="flex flex-col gap-1 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl">
+                <span className="text-xs md:text-sm font-medium">{d}</span>
+                {done && <Check className="h-3 w-3 text-emerald-500" />}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+        {DAY_LABELS.map((d, i) => {
+          const day = i + 1;
+          const dayEntries = entries.filter((e) => e.day === day);
+          return (
+            <TabsContent key={d} value={String(day)} className="mt-6 space-y-4">
+              {dayEntries.length === 0 && (
+                <Card className="p-10 rounded-2xl border-dashed border-2 text-center text-muted-foreground">
+                  Aucune tâche pour {d}. Ajoutez la première.
+                </Card>
+              )}
+              {dayEntries.map((entry) => (
+                <EntryRow key={entry.id} entry={entry} disabled={submitted}
+                  onSave={saveEntry} onDelete={() => deleteRow(entry.id)} />
+              ))}
+              {!submitted && (
+                <Button variant="outline" onClick={() => addRow(day)} disabled={saving}
+                  className="w-full h-11 rounded-xl border-dashed">
+                  <Plus className="h-4 w-4 mr-2" /> Ajouter une tâche pour {d}
+                </Button>
+              )}
+            </TabsContent>
+          );
+        })}
+      </Tabs>
+
+      <Card className="p-6 rounded-2xl border-0 shadow-[var(--shadow-card)] mt-6 grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Difficultés rencontrées</Label>
+          <Textarea rows={4} defaultValue={sheet.difficultes ?? ""} disabled={submitted}
+            onBlur={(e) => update({ data: { id: sheet.id, difficultes: e.target.value } })} />
+        </div>
+        <div className="space-y-2">
+          <Label>Observations</Label>
+          <Textarea rows={4} defaultValue={sheet.observations ?? ""} disabled={submitted}
+            onBlur={(e) => update({ data: { id: sheet.id, observations: e.target.value } })} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function EntryRow({ entry, disabled, onSave, onDelete }: {
+  entry: Entry; disabled: boolean; onSave: (e: Entry) => void; onDelete: () => void;
+}) {
+  const [local, setLocal] = useState(entry);
+  function patch(p: Partial<Entry>) { setLocal({ ...local, ...p }); }
+  function commit(p: Partial<Entry>) { const next = { ...local, ...p }; setLocal(next); onSave(next); }
+  return (
+    <Card className="p-4 rounded-2xl border shadow-sm">
+      <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_150px_40px] items-start">
+        <div>
+          <Label className="text-xs">Heure</Label>
+          <Input value={local.heure} onChange={(e) => patch({ heure: e.target.value })}
+            onBlur={(e) => commit({ heure: e.target.value })} disabled={disabled} placeholder="09:00" className="mt-1" />
+        </div>
+        <div>
+          <Label className="text-xs">Tâche réalisée</Label>
+          <Input value={local.tache} onChange={(e) => patch({ tache: e.target.value })}
+            onBlur={(e) => commit({ tache: e.target.value })} disabled={disabled} className="mt-1" />
+        </div>
+        <div>
+          <Label className="text-xs">Résultat obtenu</Label>
+          <Input value={local.resultat} onChange={(e) => patch({ resultat: e.target.value })}
+            onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" />
+        </div>
+        <div>
+          <Label className="text-xs">Statut</Label>
+          <Select value={local.statut} onValueChange={(v) => commit({ statut: v as Statut })} disabled={disabled}>
+            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="done"><StatusBadge statut="done" /></SelectItem>
+              <SelectItem value="in_progress"><StatusBadge statut="in_progress" /></SelectItem>
+              <SelectItem value="postponed"><StatusBadge statut="postponed" /></SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="pt-6">
+          <Button variant="ghost" size="icon" onClick={onDelete} disabled={disabled}
+            className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+        </div>
+      </div>
+      {local.statut === "postponed" && (
+        <div className="mt-3">
+          <Label className="text-xs">Motif du report</Label>
+          <Input value={local.motif_report} onChange={(e) => patch({ motif_report: e.target.value })}
+            onBlur={(e) => commit({ motif_report: e.target.value })} disabled={disabled}
+            placeholder="Ex : ressource indisponible…" className="mt-1" />
+        </div>
+      )}
+      <div className="mt-4">
+        <div className="flex items-center justify-between text-xs mb-2">
+          <span className="text-muted-foreground">Niveau d'avancement</span>
+          <span className="font-semibold text-primary">{local.avancement_pct}%</span>
+        </div>
+        <Slider value={[local.avancement_pct]} onValueChange={([v]) => patch({ avancement_pct: v })}
+          onValueCommit={([v]) => commit({ avancement_pct: v })} max={100} step={5} disabled={disabled} />
+      </div>
+    </Card>
+  );
+}
