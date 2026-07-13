@@ -111,10 +111,10 @@ function AdminLoginPage() {
               <ShieldCheck className="h-3.5 w-3.5" /> Accès administrateur sécurisé
             </div>
             <h1 className="text-5xl xl:text-6xl font-bold leading-[1.05] tracking-tight">
-              Pilotage RH <span className="italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>confidentiel</span>.
+              Pilotage <span className="italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>RH</span>.
             </h1>
             <p className="text-base text-white/85 leading-relaxed max-w-md">
-              Validation des fiches, suivi consolidé des employés et statistiques avancées dans un espace séparé de l'espace client.
+              Validation des fiches, suivi consolidé des employés et statistiques avancées.
             </p>
           </div>
 
