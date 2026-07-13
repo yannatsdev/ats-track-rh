@@ -64,6 +64,47 @@ export type Database = {
           },
         ]
       }
+      day_notes: {
+        Row: {
+          avancement_pct: number
+          day: number
+          difficultes: string | null
+          id: string
+          motif_report: string | null
+          observations: string | null
+          sheet_id: string
+          updated_at: string
+        }
+        Insert: {
+          avancement_pct?: number
+          day: number
+          difficultes?: string | null
+          id?: string
+          motif_report?: string | null
+          observations?: string | null
+          sheet_id: string
+          updated_at?: string
+        }
+        Update: {
+          avancement_pct?: number
+          day?: number
+          difficultes?: string | null
+          id?: string
+          motif_report?: string | null
+          observations?: string | null
+          sheet_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "day_notes_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean
