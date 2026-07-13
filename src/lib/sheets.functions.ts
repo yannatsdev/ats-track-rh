@@ -17,9 +17,11 @@ export const getOrCreateCurrentSheet = createServerFn({ method: "POST" })
       if (ins.error) throw ins.error;
       sheet = ins.data;
     }
-    const entries = await supabase.from("daily_entries").select("*")
-      .eq("sheet_id", sheet.id).order("day").order("position");
-    return { sheet, entries: entries.data ?? [] };
+    const [entries, dayNotes] = await Promise.all([
+      supabase.from("daily_entries").select("*").eq("sheet_id", sheet.id).order("day").order("position"),
+      supabase.from("day_notes").select("*").eq("sheet_id", sheet.id),
+    ]);
+    return { sheet, entries: entries.data ?? [], dayNotes: dayNotes.data ?? [] };
   });
 
 export const upsertDailyEntry = createServerFn({ method: "POST" })
@@ -57,6 +59,26 @@ export const deleteDailyEntry = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.from("daily_entries").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const upsertDayNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      sheet_id: z.string(),
+      day: z.number().int().min(1).max(5),
+      motif_report: z.string().optional().default(""),
+      avancement_pct: z.number().int().min(0).max(100).default(0),
+      difficultes: z.string().optional().default(""),
+      observations: z.string().optional().default(""),
+    }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase
+      .from("day_notes")
+      .upsert({ ...data, updated_at: new Date().toISOString() }, { onConflict: "sheet_id,day" });
     if (error) throw error;
     return { ok: true };
   });
@@ -115,10 +137,11 @@ export const adminGetSheet = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase } = context;
-    const [sheetRes, entriesRes, validationsRes] = await Promise.all([
+    const [sheetRes, entriesRes, validationsRes, dayNotesRes] = await Promise.all([
       supabase.from("weekly_sheets").select("*").eq("id", data.id).single(),
       supabase.from("daily_entries").select("*").eq("sheet_id", data.id).order("day").order("position"),
       supabase.from("validations").select("*").eq("sheet_id", data.id),
+      supabase.from("day_notes").select("*").eq("sheet_id", data.id),
     ]);
     if (sheetRes.error) throw sheetRes.error;
     const profileRes = await supabase.from("profiles").select("*").eq("id", sheetRes.data.user_id).maybeSingle();
@@ -127,6 +150,7 @@ export const adminGetSheet = createServerFn({ method: "POST" })
       entries: entriesRes.data ?? [],
       profile: profileRes.data ?? null,
       validations: validationsRes.data ?? [],
+      dayNotes: dayNotesRes.data ?? [],
     };
   });
 
