@@ -37,7 +37,8 @@ function AdminLoginPage() {
       if ((roles ?? []).some((r) => r.role === "admin")) {
         navigate({ to: "/admin/dashboard", replace: true });
       } else {
-        navigate({ to: "/dashboard", replace: true });
+        await supabase.auth.signOut();
+        if (active) setCheckingSession(false);
       }
     }
     checkSession();
