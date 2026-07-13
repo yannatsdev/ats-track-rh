@@ -111,10 +111,10 @@ function AdminLoginPage() {
               <ShieldCheck className="h-3.5 w-3.5" /> Accès administrateur sécurisé
             </div>
             <h1 className="text-5xl xl:text-6xl font-bold leading-[1.05] tracking-tight">
-              Pilotage RH <span className="italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>confidentiel</span>.
+              Pilotage <span className="italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>RH</span>.
             </h1>
             <p className="text-base text-white/85 leading-relaxed max-w-md">
-              Validation des fiches, suivi consolidé des employés et statistiques avancées dans un espace séparé de l'espace client.
+              Validation des fiches, suivi consolidé des employés et statistiques avancées.
             </p>
           </div>
 
@@ -124,13 +124,29 @@ function AdminLoginPage() {
 
       <div className="flex items-center justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
-          <div className="mb-8 flex items-start gap-4 lg:hidden">
-            <div className="h-16 w-16 rounded-2xl bg-card grid place-items-center shadow-[var(--shadow-card)] p-2">
-              <img src={atsLogoAsset.url} alt="ATS" className="h-full w-full object-contain" />
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Administration</div>
-              <h1 className="text-2xl font-bold tracking-tight">ATS TRACK RH</h1>
+          <div className="mb-8 lg:hidden">
+            <div className="relative h-44 sm:h-56 w-full overflow-hidden rounded-3xl shadow-[var(--shadow-card)]">
+              <img
+                src={authHero.url}
+                alt="Administration ATS TRACK RH"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(135deg, oklch(0.18 0.03 262 / 0.85) 0%, oklch(0.25 0.05 260 / 0.55) 55%, oklch(0.78 0.14 78 / 0.35) 100%)",
+                }}
+              />
+              <div className="relative z-10 flex h-full items-end p-4 gap-3">
+                <div className="h-14 w-14 shrink-0 rounded-2xl bg-white grid place-items-center shadow-xl ring-2 ring-white/40 p-1.5">
+                  <img src={atsLogoAsset.url} alt="ATS" className="h-full w-full object-contain" />
+                </div>
+                <div className="min-w-0 text-white">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-white/80">Administration</div>
+                  <h1 className="truncate text-xl font-bold tracking-tight">ATS TRACK RH</h1>
+                </div>
+              </div>
             </div>
           </div>
 
