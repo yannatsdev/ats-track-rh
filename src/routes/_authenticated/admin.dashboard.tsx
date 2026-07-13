@@ -12,7 +12,7 @@ import { listAllEmployeesTracking } from "@/lib/sheets.functions";
 import { isoWeekStart, DAY_LABELS } from "@/lib/week";
 import { useMe } from "@/components/app-shell";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard RH — ATS TRACK RH" }] }),
   component: AdminDashboard,
 });

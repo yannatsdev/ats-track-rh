@@ -21,7 +21,7 @@ const employeeItems = [
 ];
 
 const staffItems = [
-  { title: "Dashboard RH", to: "/admin" as const, icon: LayoutDashboard },
+  { title: "Dashboard RH", to: "/admin/dashboard" as const, icon: LayoutDashboard },
   { title: "Suivi des employés", to: "/admin/employes" as const, icon: Users },
   { title: "Validation", to: "/admin/validation" as const, icon: ShieldCheck },
   { title: "Gestion", to: "/admin/gestion" as const, icon: UserCog },
@@ -32,12 +32,14 @@ export function AppSidebar() {
   const me = useMe();
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const isActive = (p: string) => (p === "/dashboard" || p === "/admin" ? path === p : path.startsWith(p));
+  const isAdminArea = path.startsWith("/admin");
+  const menuItems = isAdminArea && me.isStaff ? staffItems : employeeItems;
+  const isActive = (p: string) => (p === "/dashboard" || p === "/admin/dashboard" ? path === p : path.startsWith(p));
   const role = primaryRole(me.roles);
 
   async function signOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: isAdminArea ? "/admin" : "/auth", replace: true });
   }
 
   return (
@@ -56,10 +58,10 @@ export function AppSidebar() {
 
       <SidebarContent className="gap-0">
         <SidebarGroup>
-          <SidebarGroupLabel>Espace Employé</SidebarGroupLabel>
+          <SidebarGroupLabel>{isAdminArea && me.isStaff ? "Espace Admin RH" : "Espace Employé"}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {employeeItems.map((it) => (
+              {menuItems.map((it) => (
                 <SidebarMenuItem key={it.to}>
                   <SidebarMenuButton asChild isActive={isActive(it.to)} tooltip={it.title}>
                     <Link to={it.to} className="flex items-center gap-2">
@@ -72,26 +74,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {me.isStaff && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Espace Admin RH</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {staffItems.map((it) => (
-                  <SidebarMenuItem key={it.to}>
-                    <SidebarMenuButton asChild isActive={isActive(it.to)} tooltip={it.title}>
-                      <Link to={it.to} className="flex items-center gap-2">
-                        <it.icon className="h-4 w-4" />
-                        <span>{it.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
 
         <SidebarGroup>
           <SidebarGroupContent>
