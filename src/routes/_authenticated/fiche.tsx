@@ -16,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Check, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet,
+  getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
 } from "@/lib/sheets.functions";
 import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
 
@@ -29,6 +29,10 @@ type Entry = {
   id?: string; sheet_id: string; day: number; heure: string; tache: string;
   resultat: string; statut: Statut; motif_report: string; avancement_pct: number; position: number;
 };
+type DayNote = {
+  id?: string; sheet_id: string; day: number;
+  motif_report: string; avancement_pct: number; difficultes: string; observations: string;
+};
 
 function FichePage() {
   const qc = useQueryClient();
@@ -37,6 +41,7 @@ function FichePage() {
   const upsert = useServerFn(upsertDailyEntry);
   const remove = useServerFn(deleteDailyEntry);
   const update = useServerFn(updateSheet);
+  const upsertNote = useServerFn(upsertDayNote);
 
   const { data, isLoading } = useQuery({
     queryKey: ["current-sheet", weekStart],
@@ -47,6 +52,7 @@ function FichePage() {
   const [saving, setSaving] = useState(false);
 
   const entries = ((data?.entries ?? []) as unknown as Entry[]);
+  const dayNotes = ((data?.dayNotes ?? []) as unknown as DayNote[]);
   const sheet = data?.sheet;
 
   const completion = useMemo(() => {
@@ -149,24 +155,67 @@ function FichePage() {
                   <Plus className="h-4 w-4 mr-2" /> Ajouter une tâche pour {d}
                 </Button>
               )}
+              <DayNoteCard
+                key={`notes-${day}`}
+                day={day}
+                sheetId={sheet.id}
+                initial={dayNotes.find((n) => n.day === day)}
+                disabled={submitted}
+                onSave={async (payload) => {
+                  await upsertNote({ data: payload });
+                  await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+                }}
+              />
             </TabsContent>
           );
         })}
       </Tabs>
 
-      <Card className="p-6 rounded-2xl border-0 shadow-[var(--shadow-card)] mt-6 grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Difficultés rencontrées</Label>
-          <Textarea rows={4} defaultValue={sheet.difficultes ?? ""} disabled={submitted}
-            onBlur={(e) => update({ data: { id: sheet.id, difficultes: e.target.value } })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Observations</Label>
-          <Textarea rows={4} defaultValue={sheet.observations ?? ""} disabled={submitted}
-            onBlur={(e) => update({ data: { id: sheet.id, observations: e.target.value } })} />
-        </div>
-      </Card>
     </div>
+  );
+}
+
+function DayNoteCard({
+  day, sheetId, initial, disabled, onSave,
+}: {
+  day: number; sheetId: string;
+  initial?: DayNote; disabled: boolean;
+  onSave: (p: { sheet_id: string; day: number; motif_report: string; avancement_pct: number; difficultes: string; observations: string }) => Promise<void>;
+}) {
+  const [motif, setMotif] = useState(initial?.motif_report ?? "");
+  const [avc, setAvc] = useState<number>(initial?.avancement_pct ?? 0);
+  const [diff, setDiff] = useState(initial?.difficultes ?? "");
+  const [obs, setObs] = useState(initial?.observations ?? "");
+  const commit = () => onSave({ sheet_id: sheetId, day, motif_report: motif, avancement_pct: avc, difficultes: diff, observations: obs });
+  return (
+    <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] space-y-4">
+      <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Notes du jour</div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label className="text-xs">Motif du report de la tâche</Label>
+          <Input value={motif} onChange={(e) => setMotif(e.target.value)} onBlur={commit} disabled={disabled}
+            placeholder="Précisez le motif si une tâche est reportée…" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Niveau d'avancement du jour</Label>
+            <span className="text-xs font-semibold text-primary">{avc}%</span>
+          </div>
+          <Slider value={[avc]} onValueChange={([v]) => setAvc(v)} onValueCommit={commit}
+            max={100} step={5} disabled={disabled} />
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label className="text-xs">Difficultés rencontrées</Label>
+          <Textarea rows={3} value={diff} onChange={(e) => setDiff(e.target.value)} onBlur={commit} disabled={disabled} />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Observations</Label>
+          <Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={commit} disabled={disabled} />
+        </div>
+      </div>
+    </Card>
   );
 }
 

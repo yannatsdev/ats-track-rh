@@ -142,7 +142,7 @@ function AuthPage() {
 
           <div className="flex items-center justify-between text-xs text-white/70">
             <div>© {new Date().getFullYear()} Africa Talent Solution</div>
-            <div className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Agréé FDFD</div>
+            <div className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Espace sécurisé</div>
           </div>
         </div>
       </div>
