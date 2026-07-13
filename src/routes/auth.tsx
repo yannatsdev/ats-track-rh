@@ -117,11 +117,11 @@ function AuthPage() {
 
         <div className="relative z-10 flex h-full flex-col justify-between p-12 text-white">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-white grid place-items-center shadow-xl">
-              <img src={atsLogoAsset.url} alt="ATS" width={40} height={40} className="object-contain" />
+            <div className="h-16 w-16 rounded-2xl bg-white grid place-items-center shadow-2xl ring-2 ring-white/40 p-2">
+              <img src={atsLogoAsset.url} alt="ATS" className="h-full w-full object-contain" />
             </div>
             <div>
-              <div className="font-bold text-base tracking-tight">ATS TRACK RH</div>
+              <div className="font-bold text-lg tracking-tight">ATS TRACK RH</div>
               <div className="text-[11px] uppercase tracking-[0.14em] text-white/70">Africa Talent Solution</div>
             </div>
           </div>
@@ -150,17 +150,6 @@ function AuthPage() {
       {/* RIGHT — Form */}
       <div className="flex items-center justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
-          {/* Mobile brand */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="h-11 w-11 rounded-xl bg-card border grid place-items-center shadow-sm">
-              <img src={atsLogoAsset.url} alt="" width={36} height={36} className="object-contain" />
-            </div>
-            <div>
-              <div className="font-bold text-sm tracking-tight">ATS TRACK RH</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Africa Talent Solution</div>
-            </div>
-          </div>
-
           <div className="mb-8">
             <h2 className="text-4xl font-bold tracking-tight" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
               {mode === "signin" ? "Bon retour parmi nous" : "Créer votre compte"}
