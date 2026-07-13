@@ -14,16 +14,239 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_entries: {
+        Row: {
+          avancement_pct: number
+          created_at: string
+          day: number
+          heure: string | null
+          id: string
+          motif_report: string | null
+          position: number
+          resultat: string | null
+          sheet_id: string
+          statut: Database["public"]["Enums"]["task_status"]
+          tache: string
+        }
+        Insert: {
+          avancement_pct?: number
+          created_at?: string
+          day: number
+          heure?: string | null
+          id?: string
+          motif_report?: string | null
+          position?: number
+          resultat?: string | null
+          sheet_id: string
+          statut?: Database["public"]["Enums"]["task_status"]
+          tache?: string
+        }
+        Update: {
+          avancement_pct?: number
+          created_at?: string
+          day?: number
+          heure?: string | null
+          id?: string
+          motif_report?: string | null
+          position?: number
+          resultat?: string | null
+          sheet_id?: string
+          statut?: Database["public"]["Enums"]["task_status"]
+          tache?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_entries_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          active: boolean
+          avatar_url: string | null
+          created_at: string
+          first_name: string | null
+          fonction: string | null
+          id: string
+          last_name: string | null
+          manager_id: string | null
+          service: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          fonction?: string | null
+          id: string
+          last_name?: string | null
+          manager_id?: string | null
+          service?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          fonction?: string | null
+          id?: string
+          last_name?: string | null
+          manager_id?: string | null
+          service?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      validations: {
+        Row: {
+          commentaire: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          sheet_id: string
+          statut: string
+          validated_at: string | null
+          validator_id: string
+        }
+        Insert: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          sheet_id: string
+          statut?: string
+          validated_at?: string | null
+          validator_id: string
+        }
+        Update: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          sheet_id?: string
+          statut?: string
+          validated_at?: string | null
+          validator_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validations_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_sheets: {
+        Row: {
+          avancement_global: number
+          bilan_actions: string | null
+          bilan_difficultes: string | null
+          bilan_dossiers: string | null
+          bilan_realisations: string | null
+          created_at: string
+          difficultes: string | null
+          id: string
+          observations: string | null
+          status: Database["public"]["Enums"]["sheet_status"]
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          avancement_global?: number
+          bilan_actions?: string | null
+          bilan_difficultes?: string | null
+          bilan_dossiers?: string | null
+          bilan_realisations?: string | null
+          created_at?: string
+          difficultes?: string | null
+          id?: string
+          observations?: string | null
+          status?: Database["public"]["Enums"]["sheet_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          avancement_global?: number
+          bilan_actions?: string | null
+          bilan_difficultes?: string | null
+          bilan_dossiers?: string | null
+          bilan_realisations?: string | null
+          created_at?: string
+          difficultes?: string | null
+          id?: string
+          observations?: string | null
+          status?: Database["public"]["Enums"]["sheet_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "employee" | "hr" | "direction" | "admin"
+      sheet_status:
+        | "draft"
+        | "submitted"
+        | "hr_validated"
+        | "direction_validated"
+        | "rejected"
+      task_status: "done" | "in_progress" | "postponed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +373,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["employee", "hr", "direction", "admin"],
+      sheet_status: [
+        "draft",
+        "submitted",
+        "hr_validated",
+        "direction_validated",
+        "rejected",
+      ],
+      task_status: ["done", "in_progress", "postponed"],
+    },
   },
 } as const
