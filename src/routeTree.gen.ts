@@ -17,7 +17,6 @@ import { Route as AuthenticatedHistoriqueRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFicheRouteImport } from './routes/_authenticated/fiche'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as ApiPublicSeedAdminsRouteImport } from './routes/api/public/seed-admins'
 import { Route as AuthenticatedFicheBilanRouteImport } from './routes/_authenticated/fiche.bilan'
 import { Route as AuthenticatedAdminValidationRouteImport } from './routes/_authenticated/admin.validation'
 import { Route as AuthenticatedAdminStatistiquesRouteImport } from './routes/_authenticated/admin.statistiques'
@@ -63,11 +62,6 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ApiPublicSeedAdminsRoute = ApiPublicSeedAdminsRouteImport.update({
-  id: '/api/public/seed-admins',
-  path: '/api/public/seed-admins',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedFicheBilanRoute = AuthenticatedFicheBilanRouteImport.update({
   id: '/bilan',
@@ -118,7 +112,6 @@ export interface FileRoutesByFullPath {
   '/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/fiche/bilan': typeof AuthenticatedFicheBilanRoute
-  '/api/public/seed-admins': typeof ApiPublicSeedAdminsRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
 }
 export interface FileRoutesByTo {
@@ -134,7 +127,6 @@ export interface FileRoutesByTo {
   '/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/fiche/bilan': typeof AuthenticatedFicheBilanRoute
-  '/api/public/seed-admins': typeof ApiPublicSeedAdminsRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
 }
 export interface FileRoutesById {
@@ -152,7 +144,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/_authenticated/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/_authenticated/fiche/bilan': typeof AuthenticatedFicheBilanRoute
-  '/api/public/seed-admins': typeof ApiPublicSeedAdminsRoute
   '/_authenticated/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
 }
 export interface FileRouteTypes {
@@ -170,7 +161,6 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/validation'
     | '/fiche/bilan'
-    | '/api/public/seed-admins'
     | '/admin/employes/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -186,7 +176,6 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/validation'
     | '/fiche/bilan'
-    | '/api/public/seed-admins'
     | '/admin/employes/$id'
   id:
     | '__root__'
@@ -203,7 +192,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/statistiques'
     | '/_authenticated/admin/validation'
     | '/_authenticated/fiche/bilan'
-    | '/api/public/seed-admins'
     | '/_authenticated/admin/employes/$id'
   fileRoutesById: FileRoutesById
 }
@@ -211,7 +199,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ApiPublicSeedAdminsRoute: typeof ApiPublicSeedAdminsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -271,13 +258,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/public/seed-admins': {
-      id: '/api/public/seed-admins'
-      path: '/api/public/seed-admins'
-      fullPath: '/api/public/seed-admins'
-      preLoaderRoute: typeof ApiPublicSeedAdminsRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/fiche/bilan': {
       id: '/_authenticated/fiche/bilan'
@@ -389,7 +369,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ApiPublicSeedAdminsRoute: ApiPublicSeedAdminsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
