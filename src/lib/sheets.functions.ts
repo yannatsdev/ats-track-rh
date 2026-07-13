@@ -78,11 +78,10 @@ export const updateSheet = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { id, status, ...rest } = data;
-    const patch: Record<string, unknown> = { ...rest };
-    if (status) {
-      patch.status = status;
-      if (status === "submitted") patch.submitted_at = new Date().toISOString();
-    }
+    const patch = {
+      ...rest,
+      ...(status ? { status, ...(status === "submitted" ? { submitted_at: new Date().toISOString() } : {}) } : {}),
+    };
     const { error } = await context.supabase.from("weekly_sheets").update(patch).eq("id", id);
     if (error) throw error;
     return { ok: true };
