@@ -8,6 +8,7 @@ import { Loader2, Search, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 
 type Ctx = Awaited<ReturnType<typeof getMyContext>>;
 const MyCtx = createContext<Ctx | null>(null);
@@ -20,6 +21,7 @@ export const useMe = () => {
 export function AppShell({ children }: { children: ReactNode }) {
   const getCtx = useServerFn(getMyContext);
   const { data, isLoading } = useQuery({ queryKey: ["me"], queryFn: () => getCtx({}) });
+  useRealtimeSync();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const isAdminArea = path.startsWith("/admin");
   const isDirection = !!data?.roles.includes("admin") || !!data?.roles.includes("direction");
