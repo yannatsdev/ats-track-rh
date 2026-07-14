@@ -49,14 +49,15 @@ function AdminDashboard() {
   const submittedCount = sheets.filter((s) => s.status !== "draft").length;
   const submissionRate = profiles.length ? Math.round((submittedCount / profiles.length) * 100) : 0;
   const pending = sheets.filter((s) => s.status === "submitted" || s.status === "hr_validated").length;
-  const submittedUserIds = new Set(sheets.map((s) => s.user_id));
+  const submittedSheets = sheets.filter((s) => s.status !== "draft");
+  const submittedUserIds = new Set(submittedSheets.map((s) => s.user_id));
   // Un employé n'est "en retard" qu'une fois la semaine terminée (après vendredi)
   const today = new Date();
   const weekEndPassed = today.getUTCDay() === 0 || today.getUTCDay() === 6;
   const lateEmployees = weekEndPassed ? profiles.filter((p) => !submittedUserIds.has(p.id)) : [];
   const late = lateEmployees.length;
 
-  const allEntries = sheets.flatMap((s) => (s.daily_entries ?? []) as { statut: string; day?: number }[]);
+  const allEntries = submittedSheets.flatMap((s) => (s.daily_entries ?? []) as { statut: string; day?: number }[]);
   const done = allEntries.filter((e) => e.statut === "done").length;
   const ongoing = allEntries.filter((e) => e.statut === "in_progress").length;
   const postponed = allEntries.filter((e) => e.statut === "postponed").length;
