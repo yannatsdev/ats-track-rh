@@ -17,7 +17,7 @@ import { Route as AuthenticatedParametresRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHistoriqueRouteImport } from './routes/_authenticated/historique'
 import { Route as AuthenticatedFicheRouteImport } from './routes/_authenticated/fiche'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedFicheBilanRouteImport } from './routes/_authenticated/fiche.bilan'
+import { Route as AuthenticatedBilanRouteImport } from './routes/_authenticated/bilan'
 import { Route as AuthenticatedAdminValidationRouteImport } from './routes/_authenticated/admin.validation'
 import { Route as AuthenticatedAdminStatistiquesRouteImport } from './routes/_authenticated/admin.statistiques'
 import { Route as AuthenticatedAdminGestionRouteImport } from './routes/_authenticated/admin.gestion'
@@ -64,10 +64,10 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedFicheBilanRoute = AuthenticatedFicheBilanRouteImport.update({
+const AuthenticatedBilanRoute = AuthenticatedBilanRouteImport.update({
   id: '/bilan',
   path: '/bilan',
-  getParentRoute: () => AuthenticatedFicheRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminValidationRoute =
   AuthenticatedAdminValidationRouteImport.update({
@@ -110,8 +110,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/bilan': typeof AuthenticatedBilanRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/fiche': typeof AuthenticatedFicheRouteWithChildren
+  '/fiche': typeof AuthenticatedFicheRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -119,15 +120,15 @@ export interface FileRoutesByFullPath {
   '/admin/gestion': typeof AuthenticatedAdminGestionRoute
   '/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
-  '/fiche/bilan': typeof AuthenticatedFicheBilanRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/bilan': typeof AuthenticatedBilanRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/fiche': typeof AuthenticatedFicheRouteWithChildren
+  '/fiche': typeof AuthenticatedFicheRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -135,7 +136,6 @@ export interface FileRoutesByTo {
   '/admin/gestion': typeof AuthenticatedAdminGestionRoute
   '/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
-  '/fiche/bilan': typeof AuthenticatedFicheBilanRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
 }
 export interface FileRoutesById {
@@ -144,8 +144,9 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/_authenticated/bilan': typeof AuthenticatedBilanRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/fiche': typeof AuthenticatedFicheRouteWithChildren
+  '/_authenticated/fiche': typeof AuthenticatedFicheRoute
   '/_authenticated/historique': typeof AuthenticatedHistoriqueRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -153,7 +154,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/gestion': typeof AuthenticatedAdminGestionRoute
   '/_authenticated/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/_authenticated/admin/validation': typeof AuthenticatedAdminValidationRoute
-  '/_authenticated/fiche/bilan': typeof AuthenticatedFicheBilanRoute
   '/_authenticated/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
 }
 export interface FileRouteTypes {
@@ -162,6 +162,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/bilan'
     | '/dashboard'
     | '/fiche'
     | '/historique'
@@ -171,13 +172,13 @@ export interface FileRouteTypes {
     | '/admin/gestion'
     | '/admin/statistiques'
     | '/admin/validation'
-    | '/fiche/bilan'
     | '/admin/employes/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/auth'
+    | '/bilan'
     | '/dashboard'
     | '/fiche'
     | '/historique'
@@ -187,7 +188,6 @@ export interface FileRouteTypes {
     | '/admin/gestion'
     | '/admin/statistiques'
     | '/admin/validation'
-    | '/fiche/bilan'
     | '/admin/employes/$id'
   id:
     | '__root__'
@@ -195,6 +195,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/admin'
     | '/auth'
+    | '/_authenticated/bilan'
     | '/_authenticated/dashboard'
     | '/_authenticated/fiche'
     | '/_authenticated/historique'
@@ -204,7 +205,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/gestion'
     | '/_authenticated/admin/statistiques'
     | '/_authenticated/admin/validation'
-    | '/_authenticated/fiche/bilan'
     | '/_authenticated/admin/employes/$id'
   fileRoutesById: FileRoutesById
 }
@@ -273,12 +273,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/fiche/bilan': {
-      id: '/_authenticated/fiche/bilan'
+    '/_authenticated/bilan': {
+      id: '/_authenticated/bilan'
       path: '/bilan'
-      fullPath: '/fiche/bilan'
-      preLoaderRoute: typeof AuthenticatedFicheBilanRouteImport
-      parentRoute: typeof AuthenticatedFicheRoute
+      fullPath: '/bilan'
+      preLoaderRoute: typeof AuthenticatedBilanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/validation': {
       id: '/_authenticated/admin/validation'
@@ -325,17 +325,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedFicheRouteChildren {
-  AuthenticatedFicheBilanRoute: typeof AuthenticatedFicheBilanRoute
-}
-
-const AuthenticatedFicheRouteChildren: AuthenticatedFicheRouteChildren = {
-  AuthenticatedFicheBilanRoute: AuthenticatedFicheBilanRoute,
-}
-
-const AuthenticatedFicheRouteWithChildren =
-  AuthenticatedFicheRoute._addFileChildren(AuthenticatedFicheRouteChildren)
-
 interface AuthenticatedAdminEmployesRouteChildren {
   AuthenticatedAdminEmployesIdRoute: typeof AuthenticatedAdminEmployesIdRoute
 }
@@ -351,8 +340,9 @@ const AuthenticatedAdminEmployesRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBilanRoute: typeof AuthenticatedBilanRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedFicheRoute: typeof AuthenticatedFicheRouteWithChildren
+  AuthenticatedFicheRoute: typeof AuthenticatedFicheRoute
   AuthenticatedHistoriqueRoute: typeof AuthenticatedHistoriqueRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
@@ -363,8 +353,9 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBilanRoute: AuthenticatedBilanRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedFicheRoute: AuthenticatedFicheRouteWithChildren,
+  AuthenticatedFicheRoute: AuthenticatedFicheRoute,
   AuthenticatedHistoriqueRoute: AuthenticatedHistoriqueRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,

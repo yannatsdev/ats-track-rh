@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_authenticated/fiche/bilan")({
+export const Route = createFileRoute("/_authenticated/bilan")({
   head: () => ({ meta: [{ title: "Bilan de la semaine — ATS TRACK RH" }] }),
   component: BilanPage,
 });
