@@ -79,7 +79,10 @@ function EmployesPage() {
             <tbody>
               {rows.map((r) => {
                 const initials = ((r.profile.first_name?.[0] ?? "") + (r.profile.last_name?.[0] ?? "")).toUpperCase() || "?";
-                const isLate = !r.sheet;
+                // Un employé n'est "en retard" qu'à partir du week-end (samedi/dimanche)
+                const dow = new Date().getUTCDay();
+                const weekEndPassed = dow === 0 || dow === 6;
+                const isLate = !r.sheet && weekEndPassed;
                 return (
                   <tr key={r.profile.id} className="border-t hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3">
@@ -97,7 +100,8 @@ function EmployesPage() {
                         <Badge className="bg-red-50 text-red-700 border border-red-200">
                           <span className="h-1.5 w-1.5 rounded-full bg-red-500 mr-1.5" />En retard
                         </Badge>
-                      ) : r.sheet?.status === "draft" ? <Badge className="bg-slate-100 text-slate-700">Brouillon</Badge>
+                       ) : !r.sheet ? <Badge variant="outline" className="text-muted-foreground">Non débutée</Badge>
+                       : r.sheet?.status === "draft" ? <Badge className="bg-slate-100 text-slate-700">Brouillon</Badge>
                        : r.sheet?.status === "submitted" ? <Badge className="bg-blue-50 text-blue-700">Soumise</Badge>
                        : r.sheet?.status === "hr_validated" ? <Badge className="bg-amber-50 text-amber-700">Validée RH</Badge>
                        : <Badge className="bg-emerald-50 text-emerald-700">Validée</Badge>}
