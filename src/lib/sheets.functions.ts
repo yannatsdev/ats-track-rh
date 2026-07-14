@@ -123,13 +123,21 @@ export const listAllEmployeesTracking = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ weekStart: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase } = context;
-    const [profilesRes, sheetsRes] = await Promise.all([
+    const [profilesRes, sheetsRes, rolesRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("active", true),
       supabase.from("weekly_sheets").select("*, daily_entries(statut, avancement_pct)")
         .eq("week_start", data.weekStart),
+      supabase.from("user_roles").select("user_id, role"),
     ]);
     if (profilesRes.error) throw profilesRes.error;
-    return { profiles: profilesRes.data ?? [], sheets: sheetsRes.data ?? [] };
+    const rolesByUser = new Map<string, string[]>();
+    (rolesRes.data ?? []).forEach((r) => {
+      const list = rolesByUser.get(r.user_id) ?? [];
+      list.push(r.role);
+      rolesByUser.set(r.user_id, list);
+    });
+    const profiles = (profilesRes.data ?? []).map((p) => ({ ...p, roles: rolesByUser.get(p.id) ?? [] }));
+    return { profiles, sheets: sheetsRes.data ?? [] };
   });
 
 export const adminGetSheet = createServerFn({ method: "POST" })
