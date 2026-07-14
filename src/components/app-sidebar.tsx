@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 const employeeItems = [
   { title: "Tableau de bord", to: "/dashboard" as const, icon: LayoutDashboard },
   { title: "Fiche de la semaine", to: "/fiche" as const, icon: FileText },
-  { title: "Bilan de la semaine", to: "/bilan" as const, icon: Sparkles },
   { title: "Mon historique", to: "/historique" as const, icon: History },
 ];
 
