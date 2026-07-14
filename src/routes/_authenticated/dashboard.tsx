@@ -47,7 +47,7 @@ function Dashboard() {
   return (
     <div>
       <PageHeader
-        title={`Bonjour ${me.profile?.first_name ?? ""} 👋`}
+        title={`Bienvenue ${me.profile?.first_name ?? ""} ${me.profile?.last_name ?? ""} 👋`}
         subtitle="Voici l'aperçu de votre semaine en cours."
         actions={
           <Button asChild className="font-semibold">
