@@ -34,7 +34,8 @@ function AdminLoginPage() {
 
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
       if (!active) return;
-      if ((roles ?? []).some((r) => r.role === "admin")) {
+      const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "direction" || r.role === "hr");
+      if (isStaff) {
         navigate({ to: "/admin/dashboard", replace: true });
       } else {
         await supabase.auth.signOut();
@@ -60,10 +61,10 @@ function AdminLoginPage() {
         .eq("user_id", data.user.id);
       if (roleError) throw roleError;
 
-      const isAdmin = (roles ?? []).some((r) => r.role === "admin");
-      if (!isAdmin) {
+      const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "direction" || r.role === "hr");
+      if (!isStaff) {
         await supabase.auth.signOut();
-        toast.error("Cet accès est réservé aux administrateurs.");
+        toast.error("Cet accès est réservé au personnel RH et à la Direction.");
         return;
       }
 
