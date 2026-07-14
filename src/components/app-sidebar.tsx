@@ -16,12 +16,18 @@ import { Button } from "@/components/ui/button";
 const employeeItems = [
   { title: "Tableau de bord", to: "/dashboard" as const, icon: LayoutDashboard },
   { title: "Fiche de la semaine", to: "/fiche" as const, icon: FileText },
-  { title: "Bilan de la semaine", to: "/fiche/bilan" as const, icon: Sparkles },
+  { title: "Bilan de la semaine", to: "/bilan" as const, icon: Sparkles },
   { title: "Mon historique", to: "/historique" as const, icon: History },
 ];
 
-const staffItems = [
+const hrItems = [
   { title: "Dashboard RH", to: "/admin/dashboard" as const, icon: LayoutDashboard },
+  { title: "Suivi des employés", to: "/admin/employes" as const, icon: Users },
+  { title: "Validation", to: "/admin/validation" as const, icon: ShieldCheck },
+];
+
+const directionItems = [
+  { title: "Dashboard Direction", to: "/admin/dashboard" as const, icon: LayoutDashboard },
   { title: "Suivi des employés", to: "/admin/employes" as const, icon: Users },
   { title: "Validation", to: "/admin/validation" as const, icon: ShieldCheck },
   { title: "Gestion", to: "/admin/gestion" as const, icon: UserCog },
@@ -33,7 +39,11 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const isAdminArea = path.startsWith("/admin");
-  const menuItems = isAdminArea && me.isStaff ? staffItems : employeeItems;
+  const isDirection = me.roles.includes("admin") || me.roles.includes("direction");
+  const isHR = me.roles.includes("hr");
+  const menuItems = isAdminArea
+    ? (isDirection ? directionItems : isHR ? hrItems : employeeItems)
+    : employeeItems;
   const isActive = (p: string) => (p === "/dashboard" || p === "/admin/dashboard" ? path === p : path.startsWith(p));
   const role = primaryRole(me.roles);
 
@@ -58,7 +68,11 @@ export function AppSidebar() {
 
       <SidebarContent className="gap-0">
         <SidebarGroup>
-          <SidebarGroupLabel>{isAdminArea && me.isStaff ? "Espace Admin RH" : "Espace Employé"}</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            {isAdminArea
+              ? (isDirection ? "Espace Direction" : isHR ? "Espace Admin RH" : "Espace Employé")
+              : "Espace Employé"}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((it) => (
