@@ -19,7 +19,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export const Route = createFileRoute("/_authenticated/admin/employes")({
+export const Route = createFileRoute("/_authenticated/admin/employes/")({
   head: () => ({ meta: [{ title: "Suivi des employés — ATS TRACK RH" }] }),
   component: EmployesPage,
 });
