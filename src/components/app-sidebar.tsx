@@ -60,7 +60,7 @@ export function AppSidebar() {
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="font-bold tracking-tight text-white text-sm truncate">ATS TRACK RH</div>
-            <div className="text-[10px] uppercase tracking-wider text-white/50">Africa Talent Solution</div>
+            <div className="text-[10px] tracking-wider text-white/50 leading-snug">Africa Talent Solution met pour le compte des Lys De Marie.</div>
           </div>
         </div>
       </SidebarHeader>
@@ -112,7 +112,7 @@ export function AppSidebar() {
             <LogOut className="h-4 w-4 mr-2" /> Déconnexion
           </Button>
           <div className="text-[10px] text-white/40 mt-3 text-center leading-relaxed">
-            Africa Talent Solution<br />Agréé FDFD
+            Africa Talent Solution met<br />pour le compte des Lys De Marie.
           </div>
         </div>
         <div className="hidden group-data-[collapsible=icon]:flex justify-center p-2">
