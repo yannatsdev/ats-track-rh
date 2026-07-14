@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Target Netlify Functions instead of the default Cloudflare Workers preset.
+  // Nitro's `netlify` preset emits static assets to `dist/` and the SSR handler
+  // to `.netlify/functions-internal/`, which Netlify picks up automatically.
+  nitro: { preset: "netlify" },
 });
