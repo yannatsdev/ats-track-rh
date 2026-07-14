@@ -171,7 +171,72 @@ function FichePage() {
         })}
       </Tabs>
 
+      <BilanSection sheetId={sheet.id} initial={sheet} disabled={submitted} />
     </div>
+  );
+}
+
+const BILAN_FIELDS = [
+  { key: "bilan_realisations" as const, label: "Principales réalisations", placeholder: "Livrables clefs, succès, deals…" },
+  { key: "bilan_dossiers" as const,     label: "Dossiers en cours",         placeholder: "Sujets ouverts, statut, échéance…" },
+  { key: "bilan_difficultes" as const,  label: "Difficultés rencontrées",   placeholder: "Points de blocage, dépendances…" },
+  { key: "bilan_actions" as const,      label: "Actions prévues (semaine prochaine)", placeholder: "Priorités, objectifs…" },
+];
+
+function BilanSection({
+  sheetId, initial, disabled,
+}: {
+  sheetId: string;
+  initial: Record<string, unknown>;
+  disabled: boolean;
+}) {
+  const qc = useQueryClient();
+  const weekStart = isoWeekStart();
+  const update = useServerFn(updateSheet);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await update({ data: { id: sheetId, ...values } });
+      toast.success("Bilan enregistré");
+      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <Card className="mt-8 p-6 rounded-2xl border-0 shadow-[var(--shadow-card)]">
+      <div className="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[oklch(0.72_0.14_74)]" />
+            Bilan de la semaine
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Synthèse hebdomadaire à destination de votre manager et de la RH.
+          </p>
+        </div>
+        <Button onClick={save} disabled={saving || disabled} size="sm">
+          <Save className="h-4 w-4 mr-2" />Enregistrer
+        </Button>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {BILAN_FIELDS.map((f) => (
+          <div key={f.key} className="space-y-2">
+            <Label className="text-sm font-semibold">{f.label}</Label>
+            <Textarea
+              rows={5}
+              defaultValue={(initial[f.key] as string | null) ?? ""}
+              placeholder={f.placeholder}
+              disabled={disabled}
+              onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+            />
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 }
 
