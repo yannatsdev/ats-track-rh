@@ -47,7 +47,8 @@ function AdminDashboard() {
   });
   const sheets = data?.sheets ?? [];
   const submittedCount = sheets.filter((s) => s.status !== "draft").length;
-  const submissionRate = profiles.length ? Math.round((submittedCount / profiles.length) * 100) : 0;
+  const sheetsTotal = sheets.length;
+  const submissionRate = sheetsTotal ? Math.round((submittedCount / sheetsTotal) * 100) : 0;
   const pending = sheets.filter((s) => s.status === "submitted" || s.status === "hr_validated").length;
   const submittedSheets = sheets.filter((s) => s.status !== "draft");
   const submittedUserIds = new Set(submittedSheets.map((s) => s.user_id));
@@ -110,7 +111,7 @@ function AdminDashboard() {
         }
       />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiRingCard label="Fiches soumises" value={`${submittedCount}/${profiles.length}`} percent={submissionRate} color="oklch(0.44 0.13 254)" />
+        <KpiRingCard label="Fiches soumises" value={`${submittedCount}/${sheetsTotal}`} percent={submissionRate} color="oklch(0.44 0.13 254)" />
         <KpiRingCard label="Taux terminées" value={`${Math.round((done/totalEntries)*100)}%`} percent={Math.round((done/totalEntries)*100)} color="oklch(0.68 0.16 148)" />
         <KpiRingCard label="Employés en retard" value={late} percent={profiles.length ? Math.round((late/profiles.length)*100) : 0} color="oklch(0.6 0.22 27)" />
         <KpiRingCard label="En attente validation" value={pending} percent={sheets.length ? Math.round((pending/sheets.length)*100) : 0} color="oklch(0.78 0.14 78)" />
