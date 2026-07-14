@@ -1,0 +1,7 @@
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+# Nitro's `netlify` preset emits the SSR handler under
+# `.netlify/functions-internal/` and Netlify wires the catch-all route to it
+# automatically — no [[redirects]] block needed.
