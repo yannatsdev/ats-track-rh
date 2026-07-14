@@ -56,15 +56,16 @@ function AdminDashboard() {
   const lateEmployees = weekEndPassed ? profiles.filter((p) => !submittedUserIds.has(p.id)) : [];
   const late = lateEmployees.length;
 
-  const allEntries = sheets.flatMap((s) => (s.daily_entries ?? []) as { statut: string }[]);
+  const allEntries = sheets.flatMap((s) => (s.daily_entries ?? []) as { statut: string; day?: number }[]);
   const done = allEntries.filter((e) => e.statut === "done").length;
   const ongoing = allEntries.filter((e) => e.statut === "in_progress").length;
   const postponed = allEntries.filter((e) => e.statut === "postponed").length;
   const totalEntries = Math.max(allEntries.length, 1);
 
+  // Tendance réelle : nombre de tâches terminées par jour de la semaine
   const trendData = DAY_LABELS.map((d, i) => ({
     day: d.slice(0, 3),
-    val: Math.round(30 + i * 10 + (done > 0 ? Math.min(done * 5, 40) : 0)),
+    val: allEntries.filter((e) => e.day === i + 1 && e.statut === "done").length,
   }));
 
   const donut = [
@@ -73,8 +74,10 @@ function AdminDashboard() {
     { name: "Reportée", value: postponed, color: "oklch(0.6 0.22 27)" },
   ];
 
+  // Effectifs par service = employés ayant soumis leur fiche cette semaine
+  const submittedProfiles = profiles.filter((p) => submittedUserIds.has(p.id));
   const services = Object.entries(
-    profiles.reduce<Record<string, number>>((acc, p) => {
+    submittedProfiles.reduce<Record<string, number>>((acc, p) => {
       const s = p.service ?? "Non défini";
       acc[s] = (acc[s] ?? 0) + 1;
       return acc;

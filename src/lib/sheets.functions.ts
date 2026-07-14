@@ -125,7 +125,7 @@ export const listAllEmployeesTracking = createServerFn({ method: "POST" })
     const { supabase } = context;
     const [profilesRes, sheetsRes, rolesRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("active", true),
-      supabase.from("weekly_sheets").select("*, daily_entries(statut, avancement_pct)")
+      supabase.from("weekly_sheets").select("*, daily_entries(day, statut, avancement_pct)")
         .eq("week_start", data.weekStart),
       supabase.from("user_roles").select("user_id, role"),
     ]);
