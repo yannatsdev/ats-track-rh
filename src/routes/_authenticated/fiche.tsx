@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge, type Statut } from "@/components/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Check, Send, Loader2 } from "lucide-react";
+import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save } from "lucide-react";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
