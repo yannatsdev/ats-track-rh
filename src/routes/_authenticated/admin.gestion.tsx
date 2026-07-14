@@ -18,8 +18,9 @@ export const Route = createFileRoute("/_authenticated/admin/gestion")({
 function GestionPage() {
   const me = useMe();
   const fn = useServerFn(listActiveEmployees);
-  const { data } = useQuery({ queryKey: ["active-employees"], queryFn: () => fn({}), enabled: me.isStaff });
-  if (!me.isStaff) return <Navigate to="/dashboard" />;
+  const isDirection = me.roles.includes("admin") || me.roles.includes("direction");
+  const { data } = useQuery({ queryKey: ["active-employees"], queryFn: () => fn({}), enabled: isDirection });
+  if (!isDirection) return <Navigate to="/admin/dashboard" />;
 
   const profiles = data?.profiles ?? [];
   const roles = data?.roles ?? [];
