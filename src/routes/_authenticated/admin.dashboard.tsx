@@ -38,13 +38,22 @@ function AdminDashboard() {
   });
   if (!me.isStaff) return <Navigate to="/dashboard" />;
 
-  const profiles = data?.profiles ?? [];
+  const allProfiles = data?.profiles ?? [];
+  // Ne compter comme "employé attendu" que les vrais employés (exclut RH / direction / admin)
+  const profiles = allProfiles.filter((p) => {
+    const r = (p as { roles?: string[] }).roles;
+    if (!r || r.length === 0) return true;
+    return r.includes("employee") && !r.some((x) => x === "hr" || x === "direction" || x === "admin");
+  });
   const sheets = data?.sheets ?? [];
   const submittedCount = sheets.filter((s) => s.status !== "draft").length;
   const submissionRate = profiles.length ? Math.round((submittedCount / profiles.length) * 100) : 0;
   const pending = sheets.filter((s) => s.status === "submitted" || s.status === "hr_validated").length;
   const submittedUserIds = new Set(sheets.map((s) => s.user_id));
-  const lateEmployees = profiles.filter((p) => !submittedUserIds.has(p.id));
+  // Un employé n'est "en retard" qu'une fois la semaine terminée (après vendredi)
+  const today = new Date();
+  const weekEndPassed = today.getUTCDay() === 0 || today.getUTCDay() === 6;
+  const lateEmployees = weekEndPassed ? profiles.filter((p) => !submittedUserIds.has(p.id)) : [];
   const late = lateEmployees.length;
 
   const allEntries = sheets.flatMap((s) => (s.daily_entries ?? []) as { statut: string }[]);
