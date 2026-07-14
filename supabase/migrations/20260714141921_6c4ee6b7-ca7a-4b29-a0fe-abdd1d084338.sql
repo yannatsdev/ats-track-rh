@@ -1,0 +1,10 @@
+ALTER TABLE public.weekly_sheets REPLICA IDENTITY FULL;
+ALTER TABLE public.daily_entries REPLICA IDENTITY FULL;
+ALTER TABLE public.day_notes REPLICA IDENTITY FULL;
+ALTER TABLE public.validations REPLICA IDENTITY FULL;
+ALTER TABLE public.profiles REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.weekly_sheets;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.daily_entries;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.day_notes;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.validations;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
