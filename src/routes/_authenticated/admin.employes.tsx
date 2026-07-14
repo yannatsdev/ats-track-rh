@@ -11,9 +11,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { listAllEmployeesTracking } from "@/lib/sheets.functions";
 import { isoWeekStart } from "@/lib/week";
-import { Search, Bell, Eye } from "lucide-react";
+import { Search, Bell, Eye, MoreHorizontal, FileText, User } from "lucide-react";
 import { toast } from "sonner";
 import { useMe } from "@/components/app-shell";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/admin/employes")({
   head: () => ({ meta: [{ title: "Suivi des employés — ATS TRACK RH" }] }),
@@ -108,18 +112,42 @@ function EmployesPage() {
                       <span className="text-emerald-600 font-medium">{r.done}</span> · <span className="text-amber-600 font-medium">{r.ongoing}</span> · <span className="text-red-500 font-medium">{r.postponed}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        {isLate && (
-                          <Button size="sm" variant="ghost" onClick={() => toast.success(`Relance envoyée à ${r.profile.first_name}`)}>
-                            <Bell className="h-4 w-4" />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label="Actions">
+                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
-                        )}
-                        {r.sheet && (
-                          <Button size="sm" variant="ghost" asChild>
-                            <Link to="/admin/employes/$id" params={{ id: r.sheet.id }}><Eye className="h-4 w-4" /></Link>
-                          </Button>
-                        )}
-                      </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuLabel className="text-xs">
+                            {r.profile.first_name} {r.profile.last_name}
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {r.sheet ? (
+                            <DropdownMenuItem asChild>
+                              <Link to="/admin/employes/$id" params={{ id: r.sheet.id }}>
+                                <Eye className="h-4 w-4 mr-2" />Voir la fiche
+                              </Link>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem disabled>
+                              <FileText className="h-4 w-4 mr-2" />Aucune fiche cette semaine
+                            </DropdownMenuItem>
+                          )}
+                          {isLate && (
+                            <DropdownMenuItem
+                              onClick={() => toast.success(`Relance envoyée à ${r.profile.first_name}`)}
+                            >
+                              <Bell className="h-4 w-4 mr-2" />Envoyer une relance
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => toast.info(`Profil de ${r.profile.first_name} ${r.profile.last_name}`)}
+                          >
+                            <User className="h-4 w-4 mr-2" />Voir le profil
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 );
