@@ -209,3 +209,31 @@ export const listActiveEmployees = createServerFn({ method: "GET" })
     if (profiles.error) throw profiles.error;
     return { profiles: profiles.data ?? [], roles: roles.data ?? [] };
   });
+
+export const adminListUserSheets = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const [sheetsRes, profileRes] = await Promise.all([
+      supabase.from("weekly_sheets").select("*").eq("user_id", data.userId).order("week_start", { ascending: false }),
+      supabase.from("profiles").select("*").eq("id", data.userId).maybeSingle(),
+    ]);
+    if (sheetsRes.error) throw sheetsRes.error;
+    return { sheets: sheetsRes.data ?? [], profile: profileRes.data ?? null };
+  });
+
+export const deleteEmployee = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    if (data.userId === userId) throw new Error("Impossible de supprimer votre propre compte.");
+    const { data: isDir } = await supabase.rpc("has_role", { _user_id: userId, _role: "direction" });
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    if (!isDir && !isAdmin) throw new Error("Réservé à la Direction.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
