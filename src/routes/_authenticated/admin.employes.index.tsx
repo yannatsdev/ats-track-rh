@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { listAllEmployeesTracking } from "@/lib/sheets.functions";
 import { isoWeekStart } from "@/lib/week";
-import { Search, Bell, Eye, MoreHorizontal, FileText, User } from "lucide-react";
+import { Search, Bell, Eye, MoreHorizontal, FileText, User, History } from "lucide-react";
 import { toast } from "sonner";
 import { useMe } from "@/components/app-shell";
 import {
@@ -138,6 +138,11 @@ function EmployesPage() {
                               <FileText className="h-4 w-4 mr-2" />Aucune fiche cette semaine
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuItem asChild>
+                            <Link to="/admin/historique/$userId" params={{ userId: r.profile.id }}>
+                              <History className="h-4 w-4 mr-2" />Historique des fiches
+                            </Link>
+                          </DropdownMenuItem>
                           {isLate && (
                             <DropdownMenuItem
                               onClick={() => toast.success(`Relance envoyée à ${r.profile.first_name}`)}
