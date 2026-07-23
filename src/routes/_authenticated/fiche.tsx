@@ -133,7 +133,7 @@ function FichePage() {
             {!submitted && (
               <span className={`text-[11px] flex items-center gap-1 ${isFriday ? "text-emerald-600" : "text-muted-foreground"}`}>
                 <CalendarClock className="h-3 w-3" />
-                À soumettre le <strong className="mx-1">vendredi</strong> en fin de journée
+                À cliquer le <strong className="mx-1">vendredi</strong> en fin de journée
               </span>
             )}
             {locked && (
@@ -265,7 +265,7 @@ function BilanSection({
             Bilan de la semaine
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Synthèse hebdomadaire à destination de votre manager et de la RH.
+            Synthèse hebdomadaire à destination de votre manager et au RH.
           </p>
         </div>
         <Button onClick={save} disabled={saving || disabled} size="sm">
@@ -426,7 +426,7 @@ function CoachCard({
     .filter((d) => !dayNotes.find((n) => n.day === d && (n.observations || n.difficultes)));
 
   if (submitted) {
-    tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par la RH.");
+    tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par le RH.");
   } else {
     if (isFriday) tips.push("📅 Nous sommes vendredi : pensez à soumettre votre fiche en fin de journée.");
     else tips.push(`📌 Le bouton « Soumettre » se clique uniquement le vendredi. Aujourd'hui, remplissez seulement les tâches du jour.`);
