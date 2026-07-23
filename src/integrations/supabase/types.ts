@@ -105,6 +105,159 @@ export type Database = {
           },
         ]
       }
+      key_results: {
+        Row: {
+          created_at: string
+          current_value: number | null
+          id: string
+          metric_unit: string | null
+          okr_id: string
+          position: number
+          progress_pct: number
+          target_value: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          metric_unit?: string | null
+          okr_id: string
+          position?: number
+          progress_pct?: number
+          target_value?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          metric_unit?: string | null
+          okr_id?: string
+          position?: number
+          progress_pct?: number
+          target_value?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_results_okr_id_fkey"
+            columns: ["okr_id"]
+            isOneToOne: false
+            referencedRelation: "okrs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      okr_validations: {
+        Row: {
+          commentaire: string | null
+          created_at: string
+          id: string
+          okr_id: string
+          role: string
+          statut: string
+          validated_at: string
+          validator_id: string
+        }
+        Insert: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          okr_id: string
+          role: string
+          statut: string
+          validated_at?: string
+          validator_id: string
+        }
+        Update: {
+          commentaire?: string | null
+          created_at?: string
+          id?: string
+          okr_id?: string
+          role?: string
+          statut?: string
+          validated_at?: string
+          validator_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "okr_validations_okr_id_fkey"
+            columns: ["okr_id"]
+            isOneToOne: false
+            referencedRelation: "okrs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      okrs: {
+        Row: {
+          ai_feedback: Json | null
+          ai_score: number | null
+          aligned_to: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          month_start: string
+          owner_id: string | null
+          progress_pct: number
+          scope: Database["public"]["Enums"]["okr_scope"]
+          service: string | null
+          status: Database["public"]["Enums"]["okr_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          aligned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          month_start: string
+          owner_id?: string | null
+          progress_pct?: number
+          scope?: Database["public"]["Enums"]["okr_scope"]
+          service?: string | null
+          status?: Database["public"]["Enums"]["okr_status"]
+          submitted_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          aligned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          month_start?: string
+          owner_id?: string | null
+          progress_pct?: number
+          scope?: Database["public"]["Enums"]["okr_scope"]
+          service?: string | null
+          status?: Database["public"]["Enums"]["okr_status"]
+          submitted_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "okrs_aligned_to_fkey"
+            columns: ["aligned_to"]
+            isOneToOne: false
+            referencedRelation: "okrs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean
@@ -281,6 +434,13 @@ export type Database = {
     }
     Enums: {
       app_role: "employee" | "hr" | "direction" | "admin"
+      okr_scope: "individual" | "service" | "organization"
+      okr_status:
+        | "draft"
+        | "submitted"
+        | "hr_validated"
+        | "direction_validated"
+        | "rejected"
       sheet_status:
         | "draft"
         | "submitted"
@@ -416,6 +576,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["employee", "hr", "direction", "admin"],
+      okr_scope: ["individual", "service", "organization"],
+      okr_status: [
+        "draft",
+        "submitted",
+        "hr_validated",
+        "direction_validated",
+        "rejected",
+      ],
       sheet_status: [
         "draft",
         "submitted",
