@@ -1,0 +1,2 @@
+UPDATE auth.users SET email = 'comptalysdemarie@gmail.com', email_change = '', email_change_token_new = '', email_change_token_current = '' WHERE id = '18cf12d6-e6e6-41ae-8a59-580454b6eb34';
+UPDATE auth.identities SET identity_data = jsonb_set(identity_data, '{email}', '"comptalysdemarie@gmail.com"') WHERE user_id = '18cf12d6-e6e6-41ae-8a59-580454b6eb34';
