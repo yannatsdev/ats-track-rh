@@ -20,6 +20,7 @@ import { Route as AuthenticatedFicheRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminValidationRouteImport } from './routes/_authenticated/admin.validation'
 import { Route as AuthenticatedAdminStatistiquesRouteImport } from './routes/_authenticated/admin.statistiques'
+import { Route as AuthenticatedAdminOkrRouteImport } from './routes/_authenticated/admin.okr'
 import { Route as AuthenticatedAdminGestionRouteImport } from './routes/_authenticated/admin.gestion'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 import { Route as AuthenticatedAdminEmployesIndexRouteImport } from './routes/_authenticated/admin.employes.index'
@@ -82,6 +83,11 @@ const AuthenticatedAdminStatistiquesRoute =
     path: '/admin/statistiques',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminOkrRoute = AuthenticatedAdminOkrRouteImport.update({
+  id: '/admin/okr',
+  path: '/admin/okr',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminGestionRoute =
   AuthenticatedAdminGestionRouteImport.update({
     id: '/admin/gestion',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/parametres': typeof AuthenticatedParametresRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/gestion': typeof AuthenticatedAdminGestionRoute
+  '/admin/okr': typeof AuthenticatedAdminOkrRoute
   '/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/parametres': typeof AuthenticatedParametresRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/gestion': typeof AuthenticatedAdminGestionRoute
+  '/admin/okr': typeof AuthenticatedAdminOkrRoute
   '/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/admin/gestion': typeof AuthenticatedAdminGestionRoute
+  '/_authenticated/admin/okr': typeof AuthenticatedAdminOkrRoute
   '/_authenticated/admin/statistiques': typeof AuthenticatedAdminStatistiquesRoute
   '/_authenticated/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/_authenticated/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/admin/dashboard'
     | '/admin/gestion'
+    | '/admin/okr'
     | '/admin/statistiques'
     | '/admin/validation'
     | '/admin/employes/$id'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/admin/dashboard'
     | '/admin/gestion'
+    | '/admin/okr'
     | '/admin/statistiques'
     | '/admin/validation'
     | '/admin/employes/$id'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated/parametres'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/admin/gestion'
+    | '/_authenticated/admin/okr'
     | '/_authenticated/admin/statistiques'
     | '/_authenticated/admin/validation'
     | '/_authenticated/admin/employes/$id'
@@ -307,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminStatistiquesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/okr': {
+      id: '/_authenticated/admin/okr'
+      path: '/admin/okr'
+      fullPath: '/admin/okr'
+      preLoaderRoute: typeof AuthenticatedAdminOkrRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/gestion': {
       id: '/_authenticated/admin/gestion'
       path: '/admin/gestion'
@@ -353,6 +372,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminGestionRoute: typeof AuthenticatedAdminGestionRoute
+  AuthenticatedAdminOkrRoute: typeof AuthenticatedAdminOkrRoute
   AuthenticatedAdminStatistiquesRoute: typeof AuthenticatedAdminStatistiquesRoute
   AuthenticatedAdminValidationRoute: typeof AuthenticatedAdminValidationRoute
   AuthenticatedAdminEmployesIdRoute: typeof AuthenticatedAdminEmployesIdRoute
@@ -368,6 +388,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminGestionRoute: AuthenticatedAdminGestionRoute,
+  AuthenticatedAdminOkrRoute: AuthenticatedAdminOkrRoute,
   AuthenticatedAdminStatistiquesRoute: AuthenticatedAdminStatistiquesRoute,
   AuthenticatedAdminValidationRoute: AuthenticatedAdminValidationRoute,
   AuthenticatedAdminEmployesIdRoute: AuthenticatedAdminEmployesIdRoute,
