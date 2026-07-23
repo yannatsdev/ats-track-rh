@@ -265,7 +265,7 @@ function BilanSection({
             Bilan de la semaine
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Synthèse hebdomadaire à destination de votre manager et de la RH.
+            Synthèse hebdomadaire à destination de votre manager et au RH.
           </p>
         </div>
         <Button onClick={save} disabled={saving || disabled} size="sm">
