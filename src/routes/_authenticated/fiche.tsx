@@ -391,3 +391,61 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
     </Card>
   );
 }
+
+function CoachCard({
+  entries, dayNotes, submitted, isFriday, dow,
+}: {
+  entries: Entry[]; dayNotes: DayNote[]; submitted: boolean; isFriday: boolean; dow: number;
+}) {
+  const tips: string[] = [];
+  const todayIdx = dow >= 1 && dow <= 5 ? dow : 1;
+  const daysWithTasks = new Set(entries.map((e) => e.day));
+  const missingDays = [1, 2, 3, 4, 5].filter((d) => d <= todayIdx && !daysWithTasks.has(d));
+  const lowProgress = entries.filter((e) => e.avancement_pct < 50 && e.statut !== "done");
+  const postponed = entries.filter((e) => e.statut === "postponed");
+  const notesMissing = [1, 2, 3, 4, 5]
+    .filter((d) => d <= todayIdx && daysWithTasks.has(d))
+    .filter((d) => !dayNotes.find((n) => n.day === d && (n.observations || n.difficultes)));
+
+  if (submitted) {
+    tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par la RH.");
+  } else {
+    if (isFriday) tips.push("📅 Nous sommes vendredi : pensez à soumettre votre fiche en fin de journée.");
+    else tips.push(`📌 Le bouton « Soumettre » se clique uniquement le vendredi. Aujourd'hui, remplissez seulement les tâches du jour.`);
+    if (missingDays.length) {
+      const labels = missingDays.map((d) => DAY_LABELS[d - 1]).join(", ");
+      tips.push(`⏰ Journées à compléter : ${labels}. Ajoutez au moins une tâche par jour travaillé.`);
+    }
+    if (postponed.length) {
+      tips.push(`↩️ ${postponed.length} tâche(s) reportée(s) : indiquez un motif clair et replanifiez-les.`);
+    }
+    if (lowProgress.length >= 3) {
+      tips.push("🎯 Plusieurs tâches sous 50%. Découpez-les en sous-étapes concrètes de 30–60 min pour avancer.");
+    }
+    if (notesMissing.length) {
+      tips.push(`📝 Notes du jour manquantes pour : ${notesMissing.map((d) => DAY_LABELS[d - 1]).join(", ")}. Ajoutez difficultés et observations.`);
+    }
+    if (entries.length === 0) {
+      tips.push("🚀 Commencez par lister 3 priorités du jour, puis affinez-les au fil de la journée.");
+    }
+  }
+
+  return (
+    <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-6 bg-gradient-to-br from-[oklch(0.98_0.02_74)] to-card">
+      <div className="flex items-start gap-3">
+        <div className="h-10 w-10 rounded-full grid place-items-center bg-[oklch(0.72_0.14_74)]/15 text-[oklch(0.55_0.14_74)] shrink-0">
+          <Lightbulb className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold">Coach ATS</h3>
+            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[oklch(0.72_0.14_74)]/20 text-[oklch(0.45_0.14_74)]">Recommandations</span>
+          </div>
+          <ul className="space-y-1.5 text-sm text-foreground/85">
+            {tips.map((t, i) => <li key={i}>{t}</li>)}
+          </ul>
+        </div>
+      </div>
+    </Card>
+  );
+}
