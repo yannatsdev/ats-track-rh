@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge, type Statut } from "@/components/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save } from "lucide-react";
+import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
@@ -101,6 +101,17 @@ function FichePage() {
     return <div className="grid place-items-center h-64"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   }
   const submitted = sheet.status !== "draft";
+  const locked = sheet.status === "hr_validated" || sheet.status === "direction_validated";
+  const today = new Date();
+  const dow = today.getDay(); // 0 dim, 5 vendredi
+  const isFriday = dow === 5;
+
+  async function reopenSheet() {
+    if (!sheet) return;
+    await update({ data: { id: sheet.id, status: "draft" } });
+    toast.success("Fiche rouverte — vous pouvez la modifier");
+    await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+  }
 
   return (
     <div>
@@ -108,10 +119,35 @@ function FichePage() {
         title="Fiche de la semaine"
         subtitle={`Semaine du ${formatWeekRange(weekStart)} · ${entries.length} tâches`}
         actions={
-          <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
-            <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre"}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {submitted && !locked ? (
+              <Button onClick={reopenSheet} variant="outline" className="font-semibold">
+                <Unlock className="h-4 w-4 mr-2" />Reprendre la modification
+              </Button>
+            ) : (
+              <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
+                <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre la fiche"}
+              </Button>
+            )}
+            {!submitted && (
+              <span className={`text-[11px] flex items-center gap-1 ${isFriday ? "text-emerald-600" : "text-muted-foreground"}`}>
+                <CalendarClock className="h-3 w-3" />
+                À soumettre le <strong className="mx-1">vendredi</strong> en fin de journée
+              </span>
+            )}
+            {locked && (
+              <span className="text-[11px] text-muted-foreground">Fiche validée — modifications verrouillées</span>
+            )}
+          </div>
         }
+      />
+
+      <CoachCard
+        entries={entries}
+        dayNotes={dayNotes}
+        submitted={submitted}
+        isFriday={isFriday}
+        dow={dow}
       />
 
       <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-6">
@@ -150,10 +186,22 @@ function FichePage() {
                   onSave={saveEntry} onDelete={() => deleteRow(entry.id)} />
               ))}
               {!submitted && (
-                <Button variant="outline" onClick={() => addRow(day)} disabled={saving}
-                  className="w-full h-11 rounded-xl border-dashed">
-                  <Plus className="h-4 w-4 mr-2" /> Ajouter une tâche pour {d}
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button variant="outline" onClick={() => addRow(day)} disabled={saving}
+                    className="flex-1 h-11 rounded-xl border-dashed">
+                    <Plus className="h-4 w-4 mr-2" /> Ajouter une tâche pour {d}
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+                      toast.success(`${d} enregistré ✓`);
+                    }}
+                    disabled={saving}
+                    className="h-11 rounded-xl sm:w-56"
+                  >
+                    <Save className="h-4 w-4 mr-2" /> Enregistrer {d}
+                  </Button>
+                </div>
               )}
               <DayNoteCard
                 key={`notes-${day}`}
@@ -339,6 +387,64 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
         </div>
         <Slider value={[local.avancement_pct]} onValueChange={([v]) => patch({ avancement_pct: v })}
           onValueCommit={([v]) => commit({ avancement_pct: v })} max={100} step={5} disabled={disabled} />
+      </div>
+    </Card>
+  );
+}
+
+function CoachCard({
+  entries, dayNotes, submitted, isFriday, dow,
+}: {
+  entries: Entry[]; dayNotes: DayNote[]; submitted: boolean; isFriday: boolean; dow: number;
+}) {
+  const tips: string[] = [];
+  const todayIdx = dow >= 1 && dow <= 5 ? dow : 1;
+  const daysWithTasks = new Set(entries.map((e) => e.day));
+  const missingDays = [1, 2, 3, 4, 5].filter((d) => d <= todayIdx && !daysWithTasks.has(d));
+  const lowProgress = entries.filter((e) => e.avancement_pct < 50 && e.statut !== "done");
+  const postponed = entries.filter((e) => e.statut === "postponed");
+  const notesMissing = [1, 2, 3, 4, 5]
+    .filter((d) => d <= todayIdx && daysWithTasks.has(d))
+    .filter((d) => !dayNotes.find((n) => n.day === d && (n.observations || n.difficultes)));
+
+  if (submitted) {
+    tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par la RH.");
+  } else {
+    if (isFriday) tips.push("📅 Nous sommes vendredi : pensez à soumettre votre fiche en fin de journée.");
+    else tips.push(`📌 Le bouton « Soumettre » se clique uniquement le vendredi. Aujourd'hui, remplissez seulement les tâches du jour.`);
+    if (missingDays.length) {
+      const labels = missingDays.map((d) => DAY_LABELS[d - 1]).join(", ");
+      tips.push(`⏰ Journées à compléter : ${labels}. Ajoutez au moins une tâche par jour travaillé.`);
+    }
+    if (postponed.length) {
+      tips.push(`↩️ ${postponed.length} tâche(s) reportée(s) : indiquez un motif clair et replanifiez-les.`);
+    }
+    if (lowProgress.length >= 3) {
+      tips.push("🎯 Plusieurs tâches sous 50%. Découpez-les en sous-étapes concrètes de 30–60 min pour avancer.");
+    }
+    if (notesMissing.length) {
+      tips.push(`📝 Notes du jour manquantes pour : ${notesMissing.map((d) => DAY_LABELS[d - 1]).join(", ")}. Ajoutez difficultés et observations.`);
+    }
+    if (entries.length === 0) {
+      tips.push("🚀 Commencez par lister 3 priorités du jour, puis affinez-les au fil de la journée.");
+    }
+  }
+
+  return (
+    <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-6 bg-gradient-to-br from-[oklch(0.98_0.02_74)] to-card">
+      <div className="flex items-start gap-3">
+        <div className="h-10 w-10 rounded-full grid place-items-center bg-[oklch(0.72_0.14_74)]/15 text-[oklch(0.55_0.14_74)] shrink-0">
+          <Lightbulb className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold">Coach ATS</h3>
+            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[oklch(0.72_0.14_74)]/20 text-[oklch(0.45_0.14_74)]">Recommandations</span>
+          </div>
+          <ul className="space-y-1.5 text-sm text-foreground/85">
+            {tips.map((t, i) => <li key={i}>{t}</li>)}
+          </ul>
+        </div>
       </div>
     </Card>
   );
