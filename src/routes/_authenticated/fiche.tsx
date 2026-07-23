@@ -133,7 +133,7 @@ function FichePage() {
             {!submitted && (
               <span className={`text-[11px] flex items-center gap-1 ${isFriday ? "text-emerald-600" : "text-muted-foreground"}`}>
                 <CalendarClock className="h-3 w-3" />
-                À soumettre le <strong className="mx-1">vendredi</strong> en fin de journée
+                À cliquer le <strong className="mx-1">vendredi</strong> en fin de journée
               </span>
             )}
             {locked && (
