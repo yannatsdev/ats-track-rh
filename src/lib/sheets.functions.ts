@@ -237,3 +237,117 @@ export const deleteEmployee = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+export const getCoachAdvice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ sheet_id: z.string() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const [sheetRes, entriesRes, notesRes, profileRes] = await Promise.all([
+      supabase.from("weekly_sheets").select("*").eq("id", data.sheet_id).eq("user_id", userId).maybeSingle(),
+      supabase.from("daily_entries").select("*").eq("sheet_id", data.sheet_id).order("day").order("position"),
+      supabase.from("day_notes").select("*").eq("sheet_id", data.sheet_id),
+      supabase.from("profiles").select("first_name,last_name,fonction,service").eq("id", userId).maybeSingle(),
+    ]);
+    if (!sheetRes.data) throw new Error("Fiche introuvable");
+    const sheet = sheetRes.data;
+    const entries = entriesRes.data ?? [];
+    const notes = notesRes.data ?? [];
+    const profile = profileRes.data;
+
+    const DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+    const today = new Date();
+    const dow = today.getDay();
+    const todayLabel = dow >= 1 && dow <= 5 ? DAYS[dow - 1] : "week-end";
+
+    const perDay = DAYS.map((label, i) => {
+      const day = i + 1;
+      const de = entries.filter((e) => e.day === day);
+      const note = notes.find((n) => n.day === day);
+      return { label, tasks: de, note };
+    });
+
+    const avg = entries.length
+      ? Math.round(entries.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / entries.length)
+      : 0;
+    const summary = {
+      employe: `${profile?.first_name ?? ""} ${profile?.last_name ?? ""} — ${profile?.fonction ?? "?"} / ${profile?.service ?? "?"}`,
+      semaine: sheet.week_start,
+      statut: sheet.status,
+      aujourdhui: todayLabel,
+      avancement_global: avg,
+      total_taches: entries.length,
+      taches_terminees: entries.filter((e) => e.statut === "done").length,
+      taches_reportees: entries.filter((e) => e.statut === "postponed").length,
+      jours: perDay.map((d) => ({
+        jour: d.label,
+        nb_taches: d.tasks.length,
+        avancement_moyen: d.tasks.length
+          ? Math.round(d.tasks.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / d.tasks.length)
+          : 0,
+        taches: d.tasks.map((t) => ({
+          heure: t.heure, tache: t.tache, resultat: t.resultat,
+          statut: t.statut, avancement: t.avancement_pct, motif_report: t.motif_report,
+        })),
+        note_du_jour: d.note ? {
+          avancement: d.note.avancement_pct,
+          motif_report: d.note.motif_report,
+          difficultes: d.note.difficultes,
+          observations: d.note.observations,
+        } : null,
+      })),
+      bilan: {
+        realisations: sheet.bilan_realisations,
+        dossiers: sheet.bilan_dossiers,
+        difficultes: sheet.bilan_difficultes,
+        actions: sheet.bilan_actions,
+      },
+    };
+
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("Coach indisponible : LOVABLE_API_KEY manquant.");
+
+    const system = `Tu es "Coach ATS", assistant RH bienveillant et pragmatique pour un employé qui remplit sa fiche de suivi hebdomadaire.
+Ta mission : analyser les données de la semaine et donner des recommandations concrètes, courtes et actionnables pour progresser.
+Règles :
+- Réponds en français, ton chaleureux mais professionnel.
+- Retourne UNIQUEMENT du JSON strict, sans markdown, sans texte hors JSON.
+- Format : { "resume": string (1 phrase), "score": number (0-100, ta note globale), "priorites": string[] (2-4 actions concrètes pour aujourd'hui/demain), "risques": string[] (1-3 points d'attention max), "encouragement": string (1 phrase motivante) }
+- Base-toi sur les faits fournis. Si peu de données, invite à compléter la fiche.
+- Ne répète jamais la donnée brute, transforme-la en conseil.`;
+
+    const userMsg = `Voici les données de ma semaine (JSON) :\n${JSON.stringify(summary, null, 2)}\n\nDonne-moi tes recommandations.`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userMsg },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      if (res.status === 429) throw new Error("Coach: limite atteinte, réessayez dans un instant.");
+      if (res.status === 402) throw new Error("Coach: crédits IA épuisés.");
+      throw new Error(`Coach indisponible (${res.status}): ${body.slice(0, 200)}`);
+    }
+    const json = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const content = json.choices?.[0]?.message?.content ?? "{}";
+    let parsed: {
+      resume?: string; score?: number; priorites?: string[]; risques?: string[]; encouragement?: string;
+    } = {};
+    try { parsed = JSON.parse(content); } catch { parsed = { resume: content }; }
+    return {
+      resume: parsed.resume ?? "",
+      score: typeof parsed.score === "number" ? parsed.score : avg,
+      priorites: Array.isArray(parsed.priorites) ? parsed.priorites : [],
+      risques: Array.isArray(parsed.risques) ? parsed.risques : [],
+      encouragement: parsed.encouragement ?? "",
+      avancement_global: avg,
+    };
+  });
