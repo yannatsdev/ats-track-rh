@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
+import { Route as AuthenticatedOkrRouteImport } from './routes/_authenticated/okr'
 import { Route as AuthenticatedHistoriqueRouteImport } from './routes/_authenticated/historique'
 import { Route as AuthenticatedFicheRouteImport } from './routes/_authenticated/fiche'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedParametresRoute = AuthenticatedParametresRouteImport.update({
   id: '/parametres',
   path: '/parametres',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOkrRoute = AuthenticatedOkrRouteImport.update({
+  id: '/okr',
+  path: '/okr',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHistoriqueRoute = AuthenticatedHistoriqueRouteImport.update({
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fiche': typeof AuthenticatedFicheRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
+  '/okr': typeof AuthenticatedOkrRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/gestion': typeof AuthenticatedAdminGestionRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fiche': typeof AuthenticatedFicheRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
+  '/okr': typeof AuthenticatedOkrRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/gestion': typeof AuthenticatedAdminGestionRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fiche': typeof AuthenticatedFicheRoute
   '/_authenticated/historique': typeof AuthenticatedHistoriqueRoute
+  '/_authenticated/okr': typeof AuthenticatedOkrRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/admin/gestion': typeof AuthenticatedAdminGestionRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/fiche'
     | '/historique'
+    | '/okr'
     | '/parametres'
     | '/admin/dashboard'
     | '/admin/gestion'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/fiche'
     | '/historique'
+    | '/okr'
     | '/parametres'
     | '/admin/dashboard'
     | '/admin/gestion'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/fiche'
     | '/_authenticated/historique'
+    | '/_authenticated/okr'
     | '/_authenticated/parametres'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/admin/gestion'
@@ -251,6 +263,13 @@ declare module '@tanstack/react-router' {
       path: '/parametres'
       fullPath: '/parametres'
       preLoaderRoute: typeof AuthenticatedParametresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/okr': {
+      id: '/_authenticated/okr'
+      path: '/okr'
+      fullPath: '/okr'
+      preLoaderRoute: typeof AuthenticatedOkrRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/historique': {
@@ -330,6 +349,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFicheRoute: typeof AuthenticatedFicheRoute
   AuthenticatedHistoriqueRoute: typeof AuthenticatedHistoriqueRoute
+  AuthenticatedOkrRoute: typeof AuthenticatedOkrRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminGestionRoute: typeof AuthenticatedAdminGestionRoute
@@ -344,6 +364,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFicheRoute: AuthenticatedFicheRoute,
   AuthenticatedHistoriqueRoute: AuthenticatedHistoriqueRoute,
+  AuthenticatedOkrRoute: AuthenticatedOkrRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminGestionRoute: AuthenticatedAdminGestionRoute,
