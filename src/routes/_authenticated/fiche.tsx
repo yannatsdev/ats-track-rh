@@ -17,6 +17,7 @@ import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, 
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
+  getCoachAdvice,
 } from "@/lib/sheets.functions";
 import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
 
@@ -143,6 +144,7 @@ function FichePage() {
       />
 
       <CoachCard
+        sheetId={sheet.id}
         entries={entries}
         dayNotes={dayNotes}
         submitted={submitted}
@@ -393,10 +395,26 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
 }
 
 function CoachCard({
-  entries, dayNotes, submitted, isFriday, dow,
+  sheetId, entries, dayNotes, submitted, isFriday, dow,
 }: {
-  entries: Entry[]; dayNotes: DayNote[]; submitted: boolean; isFriday: boolean; dow: number;
+  sheetId: string; entries: Entry[]; dayNotes: DayNote[]; submitted: boolean; isFriday: boolean; dow: number;
 }) {
+  const coachFn = useServerFn(getCoachAdvice);
+  const [advice, setAdvice] = useState<{
+    resume: string; score: number; priorites: string[]; risques: string[]; encouragement: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function runCoach() {
+    setLoading(true); setError(null);
+    try {
+      const r = await coachFn({ data: { sheet_id: sheetId } });
+      setAdvice(r);
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }
+
   const tips: string[] = [];
   const todayIdx = dow >= 1 && dow <= 5 ? dow : 1;
   const daysWithTasks = new Set(entries.map((e) => e.day));
@@ -437,13 +455,61 @@ function CoachCard({
           <Lightbulb className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <h3 className="font-semibold">Coach ATS</h3>
             <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[oklch(0.72_0.14_74)]/20 text-[oklch(0.45_0.14_74)]">Recommandations</span>
+            {advice && (
+              <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                Score {advice.score}/100
+              </span>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={runCoach}
+              disabled={loading || entries.length === 0}
+              className="ml-auto h-7 rounded-full text-xs"
+            >
+              {loading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+              {advice ? "Analyser à nouveau" : "Analyser ma semaine"}
+            </Button>
           </div>
+          {advice ? (
+            <div className="space-y-3 text-sm">
+              {advice.resume && <p className="text-foreground font-medium">{advice.resume}</p>}
+              {advice.priorites.length > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Priorités recommandées</div>
+                  <ul className="space-y-1 list-disc pl-5 text-foreground/85">
+                    {advice.priorites.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
+                </div>
+              )}
+              {advice.risques.length > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Points d'attention</div>
+                  <ul className="space-y-1 list-disc pl-5 text-foreground/85">
+                    {advice.risques.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
+                </div>
+              )}
+              {advice.encouragement && (
+                <p className="text-xs italic text-muted-foreground border-l-2 border-[oklch(0.72_0.14_74)] pl-3">
+                  {advice.encouragement}
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+          {error && <p className="text-xs text-destructive mb-2">{error}</p>}
           <ul className="space-y-1.5 text-sm text-foreground/85">
             {tips.map((t, i) => <li key={i}>{t}</li>)}
           </ul>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            Cliquez sur <strong>Analyser ma semaine</strong> pour une analyse IA personnalisée de votre avancement.
+          </p>
+            </>
+          )}
         </div>
       </div>
     </Card>
