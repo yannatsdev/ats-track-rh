@@ -426,7 +426,7 @@ function CoachCard({
     .filter((d) => !dayNotes.find((n) => n.day === d && (n.observations || n.difficultes)));
 
   if (submitted) {
-    tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par la RH.");
+    tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par le RH.");
   } else {
     if (isFriday) tips.push("📅 Nous sommes vendredi : pensez à soumettre votre fiche en fin de journée.");
     else tips.push(`📌 Le bouton « Soumettre » se clique uniquement le vendredi. Aujourd'hui, remplissez seulement les tâches du jour.`);
