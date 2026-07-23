@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, FileText, History, BarChart3, Users, ShieldCheck,
-  Settings, LogOut, UserCog, Sparkles, Target,
+  Settings, LogOut, UserCog, Sparkles,
 } from "lucide-react";
 import atsLogoAsset from "@/assets/ats-logo.png.asset.json";
 import { useMe } from "./app-shell";
@@ -16,21 +16,18 @@ import { Button } from "@/components/ui/button";
 const employeeItems = [
   { title: "Tableau de bord", to: "/dashboard" as const, icon: LayoutDashboard },
   { title: "Fiche de la semaine", to: "/fiche" as const, icon: FileText },
-  { title: "Mes OKR", to: "/okr" as const, icon: Target },
   { title: "Mon historique", to: "/historique" as const, icon: History },
 ];
 
 const hrItems = [
   { title: "Dashboard RH", to: "/admin/dashboard" as const, icon: LayoutDashboard },
   { title: "Suivi des employés", to: "/admin/employes" as const, icon: Users },
-  { title: "OKR", to: "/admin/okr" as const, icon: Target },
   { title: "Validation", to: "/admin/validation" as const, icon: ShieldCheck },
 ];
 
 const directionItems = [
   { title: "Dashboard Direction", to: "/admin/dashboard" as const, icon: LayoutDashboard },
   { title: "Suivi des employés", to: "/admin/employes" as const, icon: Users },
-  { title: "OKR", to: "/admin/okr" as const, icon: Target },
   { title: "Validation", to: "/admin/validation" as const, icon: ShieldCheck },
   { title: "Gestion", to: "/admin/gestion" as const, icon: UserCog },
   { title: "Statistiques", to: "/admin/statistiques" as const, icon: BarChart3 },
