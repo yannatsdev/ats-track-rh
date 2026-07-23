@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge, type Statut } from "@/components/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save } from "lucide-react";
+import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
@@ -101,6 +101,17 @@ function FichePage() {
     return <div className="grid place-items-center h-64"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   }
   const submitted = sheet.status !== "draft";
+  const locked = sheet.status === "hr_validated" || sheet.status === "direction_validated";
+  const today = new Date();
+  const dow = today.getDay(); // 0 dim, 5 vendredi
+  const isFriday = dow === 5;
+
+  async function reopenSheet() {
+    if (!sheet) return;
+    await update({ data: { id: sheet.id, status: "draft" } });
+    toast.success("Fiche rouverte — vous pouvez la modifier");
+    await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+  }
 
   return (
     <div>
@@ -108,10 +119,35 @@ function FichePage() {
         title="Fiche de la semaine"
         subtitle={`Semaine du ${formatWeekRange(weekStart)} · ${entries.length} tâches`}
         actions={
-          <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
-            <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre"}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {submitted && !locked ? (
+              <Button onClick={reopenSheet} variant="outline" className="font-semibold">
+                <Unlock className="h-4 w-4 mr-2" />Reprendre la modification
+              </Button>
+            ) : (
+              <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
+                <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre la fiche"}
+              </Button>
+            )}
+            {!submitted && (
+              <span className={`text-[11px] flex items-center gap-1 ${isFriday ? "text-emerald-600" : "text-muted-foreground"}`}>
+                <CalendarClock className="h-3 w-3" />
+                À soumettre le <strong className="mx-1">vendredi</strong> en fin de journée
+              </span>
+            )}
+            {locked && (
+              <span className="text-[11px] text-muted-foreground">Fiche validée — modifications verrouillées</span>
+            )}
+          </div>
         }
+      />
+
+      <CoachCard
+        entries={entries}
+        dayNotes={dayNotes}
+        submitted={submitted}
+        isFriday={isFriday}
+        dow={dow}
       />
 
       <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-6">
@@ -150,10 +186,22 @@ function FichePage() {
                   onSave={saveEntry} onDelete={() => deleteRow(entry.id)} />
               ))}
               {!submitted && (
-                <Button variant="outline" onClick={() => addRow(day)} disabled={saving}
-                  className="w-full h-11 rounded-xl border-dashed">
-                  <Plus className="h-4 w-4 mr-2" /> Ajouter une tâche pour {d}
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button variant="outline" onClick={() => addRow(day)} disabled={saving}
+                    className="flex-1 h-11 rounded-xl border-dashed">
+                    <Plus className="h-4 w-4 mr-2" /> Ajouter une tâche pour {d}
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+                      toast.success(`${d} enregistré ✓`);
+                    }}
+                    disabled={saving}
+                    className="h-11 rounded-xl sm:w-56"
+                  >
+                    <Save className="h-4 w-4 mr-2" /> Enregistrer {d}
+                  </Button>
+                </div>
               )}
               <DayNoteCard
                 key={`notes-${day}`}
