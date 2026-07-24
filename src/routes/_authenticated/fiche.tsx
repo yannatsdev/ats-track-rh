@@ -525,3 +525,66 @@ function CoachCard({
     </Card>
   );
 }
+
+function EditRequestButton({
+  sheetId, editStatus, weekStart,
+}: { sheetId: string; editStatus: string | null; weekStart: string }) {
+  const qc = useQueryClient();
+  const fn = useServerFn(requestSheetEdit);
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const pending = editStatus === "pending";
+
+  async function submit() {
+    if (reason.trim().length < 3) {
+      toast.error("Merci d'indiquer un motif.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await fn({ data: { sheet_id: sheetId, reason: reason.trim() } });
+      toast.success("Demande envoyée au RH / Direction.");
+      setOpen(false);
+      setReason("");
+      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="font-semibold" disabled={pending}>
+          <Unlock className="h-4 w-4 mr-2" />
+          {pending ? "Demande en attente" : "Demander une modification"}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Demander la modification de la fiche</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Expliquez pourquoi cette fiche validée doit être rouverte. Le RH ou la Direction
+          recevra votre demande et pourra l'accepter ou la refuser.
+        </p>
+        <Textarea
+          rows={4}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Motif de la demande (ex : oubli d'une tâche importante, correction d'un résultat…)"
+        />
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>Annuler</Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+            Envoyer la demande
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
