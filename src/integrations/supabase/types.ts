@@ -376,6 +376,11 @@ export type Database = {
           bilan_realisations: string | null
           created_at: string
           difficultes: string | null
+          edit_request_reason: string | null
+          edit_request_status: string | null
+          edit_requested_at: string | null
+          edit_resolved_at: string | null
+          edit_resolver_id: string | null
           id: string
           observations: string | null
           status: Database["public"]["Enums"]["sheet_status"]
@@ -392,6 +397,11 @@ export type Database = {
           bilan_realisations?: string | null
           created_at?: string
           difficultes?: string | null
+          edit_request_reason?: string | null
+          edit_request_status?: string | null
+          edit_requested_at?: string | null
+          edit_resolved_at?: string | null
+          edit_resolver_id?: string | null
           id?: string
           observations?: string | null
           status?: Database["public"]["Enums"]["sheet_status"]
@@ -408,6 +418,11 @@ export type Database = {
           bilan_realisations?: string | null
           created_at?: string
           difficultes?: string | null
+          edit_request_reason?: string | null
+          edit_request_status?: string | null
+          edit_requested_at?: string | null
+          edit_resolved_at?: string | null
+          edit_resolver_id?: string | null
           id?: string
           observations?: string | null
           status?: Database["public"]["Enums"]["sheet_status"]
