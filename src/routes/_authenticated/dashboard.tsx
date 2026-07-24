@@ -35,7 +35,7 @@ function Dashboard() {
     const dayEntries = entries.filter((e) => e.day === i + 1);
     const avg = dayEntries.length
       ? Math.round(dayEntries.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / dayEntries.length) : 0;
-    return { day: d.slice(0, 3), avancement: avg, done: dayEntries.filter((e) => e.statut === "done").length };
+    return { day: d.slice(0, 3), avancement: avg, "Terminée": dayEntries.filter((e) => e.statut === "done").length };
   });
 
   const donut = [
@@ -116,7 +116,7 @@ function Dashboard() {
                 <XAxis dataKey="day" tickLine={false} axisLine={false} style={{ fontSize: 12 }} />
                 <YAxis tickLine={false} axisLine={false} style={{ fontSize: 12 }} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)" }} />
-                <Bar dataKey="done" fill="oklch(0.78 0.14 78)" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="Terminée" fill="oklch(0.78 0.14 78)" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
