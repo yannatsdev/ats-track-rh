@@ -21,7 +21,14 @@ export const getOrCreateCurrentSheet = createServerFn({ method: "POST" })
       supabase.from("daily_entries").select("*").eq("sheet_id", sheet.id).order("day").order("position"),
       supabase.from("day_notes").select("*").eq("sheet_id", sheet.id),
     ]);
-    return { sheet, entries: entries.data ?? [], dayNotes: dayNotes.data ?? [] };
+    const validationsRes = await supabase
+      .from("validations").select("*").eq("sheet_id", sheet.id);
+    return {
+      sheet,
+      entries: entries.data ?? [],
+      dayNotes: dayNotes.data ?? [],
+      validations: validationsRes.data ?? [],
+    };
   });
 
 export const upsertDailyEntry = createServerFn({ method: "POST" })
@@ -174,17 +181,40 @@ export const submitValidation = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const ins = await supabase.from("validations").insert({
-      sheet_id: data.sheet_id, validator_id: userId, role: data.role,
-      statut: data.statut, commentaire: data.commentaire,
-      validated_at: new Date().toISOString(),
-    });
-    if (ins.error) throw ins.error;
-    const newStatus = data.statut === "rejected"
-      ? "rejected" : data.role === "hr" ? "hr_validated" : "direction_validated";
-    await supabase.from("weekly_sheets").update({ status: newStatus }).eq("id", data.sheet_id);
+    const existing = await supabase.from("validations")
+      .select("id").eq("sheet_id", data.sheet_id).eq("role", data.role).maybeSingle();
+    if (existing.data) {
+      const upd = await supabase.from("validations").update({
+        validator_id: userId, statut: data.statut,
+        commentaire: data.commentaire, validated_at: new Date().toISOString(),
+      }).eq("id", existing.data.id);
+      if (upd.error) throw upd.error;
+    } else {
+      const ins = await supabase.from("validations").insert({
+        sheet_id: data.sheet_id, validator_id: userId, role: data.role,
+        statut: data.statut, commentaire: data.commentaire,
+        validated_at: new Date().toISOString(),
+      });
+      if (ins.error) throw ins.error;
+    }
+    await recomputeSheetStatus(supabase, data.sheet_id);
     return { ok: true };
   });
+
+async function recomputeSheetStatus(
+  supabase: { from: (t: string) => { select: (c: string) => { eq: (k: string, v: string) => Promise<{ data: Array<{ role: string; statut: string }> | null }> }; update: (v: { status: string }) => { eq: (k: string, val: string) => Promise<{ error: unknown }> } } },
+  sheetId: string,
+) {
+  const res = await supabase.from("validations").select("role,statut").eq("sheet_id", sheetId);
+  const rows = res.data ?? [];
+  const hr = rows.find((r) => r.role === "hr");
+  const dir = rows.find((r) => r.role === "direction");
+  let status = "submitted";
+  if (hr?.statut === "rejected" || dir?.statut === "rejected") status = "rejected";
+  else if (dir?.statut === "approved") status = "direction_validated";
+  else if (hr?.statut === "approved") status = "hr_validated";
+  await supabase.from("weekly_sheets").update({ status }).eq("id", sheetId);
+}
 
 export const listPendingValidations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
