@@ -165,3 +165,85 @@ function ValidationCard({
     </Card>
   );
 }
+
+function AdminCoachCard({ sheetId, hasEntries }: { sheetId: string; hasEntries: boolean }) {
+  const coachFn = useServerFn(getCoachAdvice);
+  const [advice, setAdvice] = useState<{
+    resume: string; score: number; priorites: string[]; risques: string[]; encouragement: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run() {
+    setLoading(true); setError(null);
+    try {
+      const r = await coachFn({ data: { sheet_id: sheetId } });
+      setAdvice(r);
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-4 bg-gradient-to-br from-[oklch(0.98_0.02_74)] to-card">
+      <div className="flex items-start gap-3">
+        <div className="h-10 w-10 rounded-full grid place-items-center bg-[oklch(0.72_0.14_74)]/15 text-[oklch(0.55_0.14_74)] shrink-0">
+          <Lightbulb className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <h3 className="font-semibold">Analyse Coach IA</h3>
+            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[oklch(0.72_0.14_74)]/20 text-[oklch(0.45_0.14_74)]">
+              Vue Direction
+            </span>
+            {advice && (
+              <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                Score {advice.score}/100
+              </span>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={run}
+              disabled={loading || !hasEntries}
+              className="ml-auto h-7 rounded-full text-xs"
+            >
+              {loading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+              {advice ? "Analyser à nouveau" : "Analyser la semaine"}
+            </Button>
+          </div>
+          {error && <p className="text-xs text-destructive mb-2">{error}</p>}
+          {advice ? (
+            <div className="space-y-3 text-sm">
+              {advice.resume && <p className="text-foreground font-medium">{advice.resume}</p>}
+              {advice.priorites.length > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Priorités recommandées</div>
+                  <ul className="space-y-1 list-disc pl-5 text-foreground/85">
+                    {advice.priorites.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
+                </div>
+              )}
+              {advice.risques.length > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Points d'attention</div>
+                  <ul className="space-y-1 list-disc pl-5 text-foreground/85">
+                    {advice.risques.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
+                </div>
+              )}
+              {advice.encouragement && (
+                <p className="text-xs italic text-muted-foreground border-l-2 border-[oklch(0.72_0.14_74)] pl-3">
+                  {advice.encouragement}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Lancez l'analyse pour obtenir un score, les priorités et les risques identifiés par l'IA sur la semaine de cet employé.
+            </p>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
