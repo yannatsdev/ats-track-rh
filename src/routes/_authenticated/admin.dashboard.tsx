@@ -52,10 +52,15 @@ function AdminDashboard() {
   const pending = sheets.filter((s) => s.status === "submitted" || s.status === "hr_validated").length;
   const submittedSheets = sheets.filter((s) => s.status !== "draft");
   const submittedUserIds = new Set(submittedSheets.map((s) => s.user_id));
-  // Un employé n'est "en retard" qu'une fois la semaine terminée (après vendredi)
+  // Employés qui n'ont pas encore soumis leur fiche cette semaine (brouillon ou rien).
+  const notSubmittedEmployees = profiles.filter((p) => !submittedUserIds.has(p.id));
+  // "En retard" = vendredi soir ou week-end sans fiche soumise.
   const today = new Date();
-  const weekEndPassed = today.getUTCDay() === 0 || today.getUTCDay() === 6;
-  const lateEmployees = weekEndPassed ? profiles.filter((p) => !submittedUserIds.has(p.id)) : [];
+  const dow = today.getUTCDay(); // 0=dim, 5=ven, 6=sam
+  const hour = today.getUTCHours();
+  const isLatePeriod = dow === 0 || dow === 6 || (dow === 5 && hour >= 17);
+  const lateEmployees = isLatePeriod ? notSubmittedEmployees : [];
+  const notSubmitted = notSubmittedEmployees.length;
   const late = lateEmployees.length;
 
   const allEntries = submittedSheets.flatMap((s) => (s.daily_entries ?? []) as { statut: string; day?: number }[]);
@@ -113,7 +118,12 @@ function AdminDashboard() {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <KpiRingCard label="Fiches soumises" value={`${submittedCount}/${sheetsTotal}`} percent={submissionRate} color="oklch(0.44 0.13 254)" />
         <KpiRingCard label="Taux terminées" value={`${Math.round((done/totalEntries)*100)}%`} percent={Math.round((done/totalEntries)*100)} color="oklch(0.68 0.16 148)" />
-        <KpiRingCard label="Employés en retard" value={late} percent={profiles.length ? Math.round((late/profiles.length)*100) : 0} color="oklch(0.6 0.22 27)" />
+        <KpiRingCard
+          label={isLatePeriod ? "Employés en retard" : "Fiches non soumises"}
+          value={isLatePeriod ? late : notSubmitted}
+          percent={profiles.length ? Math.round(((isLatePeriod ? late : notSubmitted) / profiles.length) * 100) : 0}
+          color="oklch(0.6 0.22 27)"
+        />
         <KpiRingCard label="En attente validation" value={pending} percent={sheets.length ? Math.round((pending/sheets.length)*100) : 0} color="oklch(0.78 0.14 78)" />
       </div>
 
@@ -160,24 +170,34 @@ function AdminDashboard() {
 
         <Card className="p-6 rounded-2xl border-0 shadow-[var(--shadow-card)]">
           <h3 className="font-semibold flex items-center gap-2 mb-1">
-            <AlertTriangle className="h-4 w-4 text-[oklch(0.6_0.22_27)]" />Employés en retard
+            <AlertTriangle className="h-4 w-4 text-[oklch(0.6_0.22_27)]" />Fiches non soumises
           </h3>
-          <p className="text-xs text-muted-foreground mb-4">N'ont pas encore ouvert leur fiche cette semaine.</p>
-          {lateEmployees.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-6 text-center">Personne en retard 🎉</div>
+          <p className="text-xs text-muted-foreground mb-4">
+            {isLatePeriod
+              ? "Ces employés sont maintenant en retard (fin de semaine passée)."
+              : "Employés qui n'ont pas encore soumis leur fiche cette semaine."}
+          </p>
+          {notSubmittedEmployees.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">Toutes les fiches sont soumises 🎉</div>
           ) : (
             <ul className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-              {lateEmployees.slice(0, 8).map((p) => (
-                <li key={p.id} className="flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-muted/40">
-                  <div className="h-8 w-8 rounded-full bg-[oklch(0.6_0.22_27)]/10 grid place-items-center text-[10px] font-semibold text-[oklch(0.6_0.22_27)]">
-                    {(p.first_name?.[0] ?? "?") + (p.last_name?.[0] ?? "")}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium truncate">{p.first_name} {p.last_name}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">{p.service ?? "—"}</div>
-                  </div>
-                </li>
-              ))}
+              {notSubmittedEmployees.slice(0, 8).map((p) => {
+                const late = isLatePeriod;
+                return (
+                  <li key={p.id} className="flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-muted/40">
+                    <div className={"h-8 w-8 rounded-full grid place-items-center text-[10px] font-semibold " + (late ? "bg-[oklch(0.6_0.22_27)]/10 text-[oklch(0.6_0.22_27)]" : "bg-amber-100 text-amber-700")}>
+                      {(p.first_name?.[0] ?? "?") + (p.last_name?.[0] ?? "")}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">{p.first_name} {p.last_name}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">{p.service ?? "—"}</div>
+                    </div>
+                    <Badge variant="outline" className={"text-[10px] " + (late ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200")}>
+                      {late ? "En retard" : "Non soumise"}
+                    </Badge>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Card>
