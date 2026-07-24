@@ -150,10 +150,10 @@ function EmployesPage() {
                               <Bell className="h-4 w-4 mr-2" />Envoyer une relance
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem
-                            onClick={() => toast.info(`Profil de ${r.profile.first_name} ${r.profile.last_name}`)}
-                          >
-                            <User className="h-4 w-4 mr-2" />Voir le profil
+                          <DropdownMenuItem asChild>
+                            <Link to="/admin/profil/$userId" params={{ userId: r.profile.id }}>
+                              <User className="h-4 w-4 mr-2" />Voir le profil
+                            </Link>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

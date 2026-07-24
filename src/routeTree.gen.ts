@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminStatistiquesRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminGestionRouteImport } from './routes/_authenticated/admin.gestion'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 import { Route as AuthenticatedAdminEmployesIndexRouteImport } from './routes/_authenticated/admin.employes.index'
+import { Route as AuthenticatedAdminProfilUserIdRouteImport } from './routes/_authenticated/admin.profil.$userId'
 import { Route as AuthenticatedAdminHistoriqueUserIdRouteImport } from './routes/_authenticated/admin.historique.$userId'
 import { Route as AuthenticatedAdminEmployesIdRouteImport } from './routes/_authenticated/admin.employes.$id'
 
@@ -94,6 +95,12 @@ const AuthenticatedAdminEmployesIndexRoute =
     path: '/admin/employes/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminProfilUserIdRoute =
+  AuthenticatedAdminProfilUserIdRouteImport.update({
+    id: '/admin/profil/$userId',
+    path: '/admin/profil/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminHistoriqueUserIdRoute =
   AuthenticatedAdminHistoriqueUserIdRouteImport.update({
     id: '/admin/historique/$userId',
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
   '/admin/historique/$userId': typeof AuthenticatedAdminHistoriqueUserIdRoute
+  '/admin/profil/$userId': typeof AuthenticatedAdminProfilUserIdRoute
   '/admin/employes/': typeof AuthenticatedAdminEmployesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -137,6 +145,7 @@ export interface FileRoutesByTo {
   '/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
   '/admin/historique/$userId': typeof AuthenticatedAdminHistoriqueUserIdRoute
+  '/admin/profil/$userId': typeof AuthenticatedAdminProfilUserIdRoute
   '/admin/employes': typeof AuthenticatedAdminEmployesIndexRoute
 }
 export interface FileRoutesById {
@@ -155,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/validation': typeof AuthenticatedAdminValidationRoute
   '/_authenticated/admin/employes/$id': typeof AuthenticatedAdminEmployesIdRoute
   '/_authenticated/admin/historique/$userId': typeof AuthenticatedAdminHistoriqueUserIdRoute
+  '/_authenticated/admin/profil/$userId': typeof AuthenticatedAdminProfilUserIdRoute
   '/_authenticated/admin/employes/': typeof AuthenticatedAdminEmployesIndexRoute
 }
 export interface FileRouteTypes {
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/admin/validation'
     | '/admin/employes/$id'
     | '/admin/historique/$userId'
+    | '/admin/profil/$userId'
     | '/admin/employes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/admin/validation'
     | '/admin/employes/$id'
     | '/admin/historique/$userId'
+    | '/admin/profil/$userId'
     | '/admin/employes'
   id:
     | '__root__'
@@ -206,6 +218,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/validation'
     | '/_authenticated/admin/employes/$id'
     | '/_authenticated/admin/historique/$userId'
+    | '/_authenticated/admin/profil/$userId'
     | '/_authenticated/admin/employes/'
   fileRoutesById: FileRoutesById
 }
@@ -309,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEmployesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/profil/$userId': {
+      id: '/_authenticated/admin/profil/$userId'
+      path: '/admin/profil/$userId'
+      fullPath: '/admin/profil/$userId'
+      preLoaderRoute: typeof AuthenticatedAdminProfilUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/historique/$userId': {
       id: '/_authenticated/admin/historique/$userId'
       path: '/admin/historique/$userId'
@@ -337,6 +357,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminValidationRoute: typeof AuthenticatedAdminValidationRoute
   AuthenticatedAdminEmployesIdRoute: typeof AuthenticatedAdminEmployesIdRoute
   AuthenticatedAdminHistoriqueUserIdRoute: typeof AuthenticatedAdminHistoriqueUserIdRoute
+  AuthenticatedAdminProfilUserIdRoute: typeof AuthenticatedAdminProfilUserIdRoute
   AuthenticatedAdminEmployesIndexRoute: typeof AuthenticatedAdminEmployesIndexRoute
 }
 
@@ -352,6 +373,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminEmployesIdRoute: AuthenticatedAdminEmployesIdRoute,
   AuthenticatedAdminHistoriqueUserIdRoute:
     AuthenticatedAdminHistoriqueUserIdRoute,
+  AuthenticatedAdminProfilUserIdRoute: AuthenticatedAdminProfilUserIdRoute,
   AuthenticatedAdminEmployesIndexRoute: AuthenticatedAdminEmployesIndexRoute,
 }
 
