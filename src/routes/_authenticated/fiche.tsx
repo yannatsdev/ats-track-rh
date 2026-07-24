@@ -17,7 +17,7 @@ import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, 
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
-  getCoachAdvice,
+  getCoachAdvice, requestSheetEdit,
 } from "@/lib/sheets.functions";
 import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
 
@@ -106,6 +106,7 @@ function FichePage() {
   const today = new Date();
   const dow = today.getDay(); // 0 dim, 5 vendredi
   const isFriday = dow === 5;
+  const editStatus = (sheet as { edit_request_status?: string | null }).edit_request_status ?? null;
 
   async function reopenSheet() {
     if (!sheet) return;
@@ -125,6 +126,8 @@ function FichePage() {
               <Button onClick={reopenSheet} variant="outline" className="font-semibold">
                 <Unlock className="h-4 w-4 mr-2" />Reprendre la modification
               </Button>
+            ) : locked ? (
+              <EditRequestButton sheetId={sheet.id} editStatus={editStatus} weekStart={weekStart} />
             ) : (
               <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
                 <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre la fiche"}
@@ -137,7 +140,13 @@ function FichePage() {
               </span>
             )}
             {locked && (
-              <span className="text-[11px] text-muted-foreground">Fiche validée — modifications verrouillées</span>
+              <span className="text-[11px] text-muted-foreground">
+                {editStatus === "pending"
+                  ? "Demande de modification en attente de validation…"
+                  : editStatus === "rejected"
+                  ? "Dernière demande refusée — vous pouvez en soumettre une nouvelle."
+                  : "Fiche validée — vous pouvez demander une modification."}
+              </span>
             )}
           </div>
         }
