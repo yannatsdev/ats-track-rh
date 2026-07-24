@@ -258,7 +258,12 @@ export const resolveEditRequest = createServerFn({ method: "POST" })
     const roles = (rolesRes.data ?? []).map((r) => r.role as string);
     const canDecide = roles.some((r) => r === "hr" || r === "direction" || r === "admin");
     if (!canDecide) throw new Error("Réservé au RH ou à la Direction.");
-    const patch: Record<string, unknown> = {
+    const patch: {
+      edit_request_status: "approved" | "rejected";
+      edit_resolved_at: string;
+      edit_resolver_id: string;
+      status?: "draft";
+    } = {
       edit_request_status: data.decision,
       edit_resolved_at: new Date().toISOString(),
       edit_resolver_id: userId,
