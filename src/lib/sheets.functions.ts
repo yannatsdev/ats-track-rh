@@ -201,12 +201,10 @@ export const submitValidation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-async function recomputeSheetStatus(
-  supabase: { from: (t: string) => { select: (c: string) => { eq: (k: string, v: string) => Promise<{ data: Array<{ role: string; statut: string }> | null }> }; update: (v: { status: string }) => { eq: (k: string, val: string) => Promise<{ error: unknown }> } } },
-  sheetId: string,
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function recomputeSheetStatus(supabase: any, sheetId: string) {
   const res = await supabase.from("validations").select("role,statut").eq("sheet_id", sheetId);
-  const rows = res.data ?? [];
+  const rows = (res.data ?? []) as Array<{ role: string; statut: string }>;
   const hr = rows.find((r) => r.role === "hr");
   const dir = rows.find((r) => r.role === "direction");
   let status = "submitted";
