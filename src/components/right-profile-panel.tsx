@@ -72,7 +72,7 @@ export function RightProfilePanel() {
       </div>
       <div className="mt-6 rounded-2xl bg-white/5 p-4 border border-white/5">
         <div className="text-xs text-white/60">Rappel</div>
-        <div className="text-sm mt-1">Soumettez votre fiche avant vendredi 17h.</div>
+        <div className="text-sm mt-1">Soumettez votre fiche avant la fin de la journée de Vendredi.</div>
       </div>
     </div>
   );

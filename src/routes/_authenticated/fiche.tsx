@@ -14,10 +14,11 @@ import { StatusBadge, type Statut } from "@/components/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
-  getCoachAdvice,
+  getCoachAdvice, requestSheetEdit,
 } from "@/lib/sheets.functions";
 import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
 
@@ -106,6 +107,7 @@ function FichePage() {
   const today = new Date();
   const dow = today.getDay(); // 0 dim, 5 vendredi
   const isFriday = dow === 5;
+  const editStatus = (sheet as { edit_request_status?: string | null }).edit_request_status ?? null;
 
   async function reopenSheet() {
     if (!sheet) return;
@@ -125,6 +127,8 @@ function FichePage() {
               <Button onClick={reopenSheet} variant="outline" className="font-semibold">
                 <Unlock className="h-4 w-4 mr-2" />Reprendre la modification
               </Button>
+            ) : locked ? (
+              <EditRequestButton sheetId={sheet.id} editStatus={editStatus} weekStart={weekStart} />
             ) : (
               <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
                 <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre la fiche"}
@@ -137,7 +141,13 @@ function FichePage() {
               </span>
             )}
             {locked && (
-              <span className="text-[11px] text-muted-foreground">Fiche validée — modifications verrouillées</span>
+              <span className="text-[11px] text-muted-foreground">
+                {editStatus === "pending"
+                  ? "Demande de modification en attente de validation…"
+                  : editStatus === "rejected"
+                  ? "Dernière demande refusée — vous pouvez en soumettre une nouvelle."
+                  : "Fiche validée — vous pouvez demander une modification."}
+              </span>
             )}
           </div>
         }
@@ -513,5 +523,68 @@ function CoachCard({
         </div>
       </div>
     </Card>
+  );
+}
+
+function EditRequestButton({
+  sheetId, editStatus, weekStart,
+}: { sheetId: string; editStatus: string | null; weekStart: string }) {
+  const qc = useQueryClient();
+  const fn = useServerFn(requestSheetEdit);
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const pending = editStatus === "pending";
+
+  async function submit() {
+    if (reason.trim().length < 3) {
+      toast.error("Merci d'indiquer un motif.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await fn({ data: { sheet_id: sheetId, reason: reason.trim() } });
+      toast.success("Demande envoyée au RH / Direction.");
+      setOpen(false);
+      setReason("");
+      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="font-semibold" disabled={pending}>
+          <Unlock className="h-4 w-4 mr-2" />
+          {pending ? "Demande en attente" : "Demander une modification"}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Demander la modification de la fiche</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Expliquez pourquoi cette fiche validée doit être rouverte. Le RH ou la Direction
+          recevra votre demande et pourra l'accepter ou la refuser.
+        </p>
+        <Textarea
+          rows={4}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Motif de la demande (ex : oubli d'une tâche importante, correction d'un résultat…)"
+        />
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>Annuler</Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+            Envoyer la demande
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

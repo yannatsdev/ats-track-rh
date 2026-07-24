@@ -227,6 +227,57 @@ export const listPendingValidations = createServerFn({ method: "GET" })
     return { sheets: data ?? [], profiles };
   });
 
+export const requestSheetEdit = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ sheet_id: z.string(), reason: z.string().min(3) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const own = await supabase.from("weekly_sheets").select("id,user_id,status")
+      .eq("id", data.sheet_id).maybeSingle();
+    if (!own.data || own.data.user_id !== userId) throw new Error("Fiche introuvable");
+    const { error } = await supabase.from("weekly_sheets").update({
+      edit_request_status: "pending",
+      edit_request_reason: data.reason,
+      edit_requested_at: new Date().toISOString(),
+      edit_resolved_at: null,
+      edit_resolver_id: null,
+    }).eq("id", data.sheet_id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const resolveEditRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    sheet_id: z.string(),
+    decision: z.enum(["approved", "rejected"]),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const rolesRes = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const roles = (rolesRes.data ?? []).map((r) => r.role as string);
+    const canDecide = roles.some((r) => r === "hr" || r === "direction" || r === "admin");
+    if (!canDecide) throw new Error("Réservé au RH ou à la Direction.");
+    const patch: {
+      edit_request_status: "approved" | "rejected";
+      edit_resolved_at: string;
+      edit_resolver_id: string;
+      status?: "draft";
+    } = {
+      edit_request_status: data.decision,
+      edit_resolved_at: new Date().toISOString(),
+      edit_resolver_id: userId,
+    };
+    if (data.decision === "approved") {
+      // Reopen the sheet for editing and clear prior validations.
+      patch.status = "draft";
+      await supabase.from("validations").delete().eq("sheet_id", data.sheet_id);
+    }
+    const { error } = await supabase.from("weekly_sheets").update(patch).eq("id", data.sheet_id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const listActiveEmployees = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

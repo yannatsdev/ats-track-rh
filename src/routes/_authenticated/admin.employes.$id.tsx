@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { Label } from "@/components/ui/label";
-import { adminGetSheet, submitValidation, getCoachAdvice } from "@/lib/sheets.functions";
+import { adminGetSheet, submitValidation, getCoachAdvice, resolveEditRequest } from "@/lib/sheets.functions";
 import { formatWeekRange, DAY_LABELS } from "@/lib/week";
 import { useMe } from "@/components/app-shell";
 import { ArrowLeft, Check, X, Sparkles, Loader2, Lightbulb } from "lucide-react";
@@ -25,6 +25,7 @@ function EmpSheet() {
   const qc = useQueryClient();
   const getFn = useServerFn(adminGetSheet);
   const validateFn = useServerFn(submitValidation);
+  const resolveFn = useServerFn(resolveEditRequest);
   const { data } = useQuery({
     queryKey: ["admin-sheet", id],
     queryFn: () => getFn({ data: { id } }),
@@ -49,6 +50,14 @@ function EmpSheet() {
   const canHR = me.roles.includes("hr") || me.roles.includes("admin");
   const canDir = me.roles.includes("direction") || me.roles.includes("admin");
   const showCoach = me.roles.includes("direction") || me.roles.includes("admin");
+  const canDecideEdit = canHR || canDir;
+  const editReq = (sheet as { edit_request_status?: string | null; edit_request_reason?: string | null; edit_requested_at?: string | null });
+
+  async function decideEdit(decision: "approved" | "rejected") {
+    await resolveFn({ data: { sheet_id: id, decision } });
+    toast.success(decision === "approved" ? "Fiche rouverte pour l'employé" : "Demande refusée");
+    await qc.invalidateQueries({ queryKey: ["admin-sheet", id] });
+  }
 
   return (
     <div>
@@ -59,6 +68,33 @@ function EmpSheet() {
         title={`${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`}
         subtitle={`${profile?.fonction ?? "—"} · ${profile?.service ?? "—"} · Semaine du ${formatWeekRange(sheet.week_start)}`}
       />
+      {editReq.edit_request_status === "pending" && (
+        <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-4 bg-amber-50">
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="text-xs uppercase tracking-wider text-amber-700 font-semibold mb-1">
+                Demande de modification en attente
+              </div>
+              <p className="text-sm text-foreground">
+                {editReq.edit_request_reason || <em className="text-muted-foreground">Sans motif.</em>}
+              </p>
+              <div className="text-[11px] text-muted-foreground mt-1">
+                {editReq.edit_requested_at ? new Date(editReq.edit_requested_at).toLocaleString("fr-FR") : ""}
+              </div>
+            </div>
+            {canDecideEdit && (
+              <div className="flex gap-2 shrink-0">
+                <Button size="sm" onClick={() => decideEdit("approved")}>
+                  <Check className="h-4 w-4 mr-1" />Accepter
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => decideEdit("rejected")}>
+                  <X className="h-4 w-4 mr-1" />Refuser
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
       {showCoach && <AdminCoachCard sheetId={sheet.id} hasEntries={entries.length > 0} />}
       <div className="space-y-4">
         {DAY_LABELS.map((d, i) => {
