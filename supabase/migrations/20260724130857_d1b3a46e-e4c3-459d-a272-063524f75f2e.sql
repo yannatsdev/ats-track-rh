@@ -1,0 +1,1 @@
+update public.profiles set service = 'Secrétariat', fonction = 'Secrétaire' where id = 'ec8a4f0b-2972-40c7-ac30-b478213c0967';
