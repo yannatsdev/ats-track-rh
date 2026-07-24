@@ -243,8 +243,14 @@ export const getCoachAdvice = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ sheet_id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
+    // Staff (hr/direction/admin) may analyze any employee's sheet.
+    const rolesRes = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const roles = (rolesRes.data ?? []).map((r) => r.role as string);
+    const isStaff = roles.some((r) => r === "hr" || r === "direction" || r === "admin");
     const [sheetRes, entriesRes, notesRes, profileRes] = await Promise.all([
-      supabase.from("weekly_sheets").select("*").eq("id", data.sheet_id).eq("user_id", userId).maybeSingle(),
+      isStaff
+        ? supabase.from("weekly_sheets").select("*").eq("id", data.sheet_id).maybeSingle()
+        : supabase.from("weekly_sheets").select("*").eq("id", data.sheet_id).eq("user_id", userId).maybeSingle(),
       supabase.from("daily_entries").select("*").eq("sheet_id", data.sheet_id).order("day").order("position"),
       supabase.from("day_notes").select("*").eq("sheet_id", data.sheet_id),
       supabase.from("profiles").select("first_name,last_name,fonction,service").eq("id", userId).maybeSingle(),
@@ -253,7 +259,16 @@ export const getCoachAdvice = createServerFn({ method: "POST" })
     const sheet = sheetRes.data;
     const entries = entriesRes.data ?? [];
     const notes = notesRes.data ?? [];
-    const profile = profileRes.data;
+    // For staff, load the sheet owner's profile for the AI context.
+    let profile = profileRes.data;
+    if (isStaff && sheet.user_id !== userId) {
+      const ownerRes = await supabase
+        .from("profiles")
+        .select("first_name,last_name,fonction,service")
+        .eq("id", sheet.user_id)
+        .maybeSingle();
+      profile = ownerRes.data ?? profile;
+    }
 
     const DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
     const today = new Date();
