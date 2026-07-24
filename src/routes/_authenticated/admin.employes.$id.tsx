@@ -8,10 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { Label } from "@/components/ui/label";
-import { adminGetSheet, submitValidation } from "@/lib/sheets.functions";
+import { adminGetSheet, submitValidation, getCoachAdvice } from "@/lib/sheets.functions";
 import { formatWeekRange, DAY_LABELS } from "@/lib/week";
 import { useMe } from "@/components/app-shell";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, Check, X, Sparkles, Loader2, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/employes/$id")({
@@ -45,6 +45,7 @@ function EmpSheet() {
   const { sheet, entries, profile, validations, dayNotes } = data;
   const canHR = me.roles.includes("hr") || me.roles.includes("admin");
   const canDir = me.roles.includes("direction") || me.roles.includes("admin");
+  const showCoach = me.roles.includes("direction") || me.roles.includes("admin");
 
   return (
     <div>
@@ -55,6 +56,7 @@ function EmpSheet() {
         title={`${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`}
         subtitle={`${profile?.fonction ?? "—"} · ${profile?.service ?? "—"} · Semaine du ${formatWeekRange(sheet.week_start)}`}
       />
+      {showCoach && <AdminCoachCard sheetId={sheet.id} hasEntries={entries.length > 0} />}
       <div className="space-y-4">
         {DAY_LABELS.map((d, i) => {
           const day = i + 1;
