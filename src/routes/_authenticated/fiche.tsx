@@ -14,6 +14,7 @@ import { StatusBadge, type Statut } from "@/components/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
