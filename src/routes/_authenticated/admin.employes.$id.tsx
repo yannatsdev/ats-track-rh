@@ -32,6 +32,8 @@ function EmpSheet() {
   });
   const [commentHR, setCommentHR] = useState("");
   const [commentDir, setCommentDir] = useState("");
+  const [editHR, setEditHR] = useState(false);
+  const [editDir, setEditDir] = useState(false);
 
   if (!me.isStaff) return <Navigate to="/dashboard" />;
   if (!data) return null;
@@ -39,6 +41,7 @@ function EmpSheet() {
   async function act(role: "hr" | "direction", statut: "approved" | "rejected", commentaire: string) {
     await validateFn({ data: { sheet_id: id, role, statut, commentaire } });
     toast.success(statut === "approved" ? "Fiche validée" : "Fiche rejetée");
+    if (role === "hr") setEditHR(false); else setEditDir(false);
     await qc.invalidateQueries({ queryKey: ["admin-sheet", id] });
   }
 
@@ -117,11 +120,17 @@ function EmpSheet() {
         <ValidationCard title="Avis Service RH" disabled={!canHR}
           value={commentHR} onChange={setCommentHR}
           existing={validations.find((v) => v.role === "hr")}
+          editing={editHR}
+          onEdit={() => { const v = validations.find((x) => x.role === "hr"); setCommentHR(v?.commentaire ?? ""); setEditHR(true); }}
+          onCancel={() => setEditHR(false)}
           onApprove={() => act("hr", "approved", commentHR)}
           onReject={() => act("hr", "rejected", commentHR)} />
         <ValidationCard title="Avis Direction Générale" disabled={!canDir}
           value={commentDir} onChange={setCommentDir}
           existing={validations.find((v) => v.role === "direction")}
+          editing={editDir}
+          onEdit={() => { const v = validations.find((x) => x.role === "direction"); setCommentDir(v?.commentaire ?? ""); setEditDir(true); }}
+          onCancel={() => setEditDir(false)}
           onApprove={() => act("direction", "approved", commentDir)}
           onReject={() => act("direction", "rejected", commentDir)} />
       </div>
@@ -130,10 +139,11 @@ function EmpSheet() {
 }
 
 function ValidationCard({
-  title, disabled, value, onChange, existing, onApprove, onReject,
+  title, disabled, value, onChange, existing, editing, onEdit, onCancel, onApprove, onReject,
 }: {
   title: string; disabled: boolean; value: string; onChange: (v: string) => void;
   existing?: { statut: string; commentaire: string | null; validated_at: string | null };
+  editing: boolean; onEdit: () => void; onCancel: () => void;
   onApprove: () => void; onReject: () => void;
 }) {
   const isValidated = existing?.statut === "approved";
@@ -147,10 +157,15 @@ function ValidationCard({
           </span>
         )}
       </div>
-      {existing ? (
+      {existing && !editing ? (
         <div className="text-sm text-muted-foreground">
           {existing.commentaire || <em>Sans commentaire.</em>}
           <div className="text-xs mt-2 opacity-70">{existing.validated_at ? new Date(existing.validated_at).toLocaleString("fr-FR") : ""}</div>
+          {!disabled && (
+            <Button size="sm" variant="outline" className="mt-3 h-8 rounded-full" onClick={onEdit}>
+              Modifier l'avis
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -160,6 +175,9 @@ function ValidationCard({
             <Button onClick={onApprove} disabled={disabled} className="flex-1"><Check className="h-4 w-4 mr-1" />Valider</Button>
             <Button onClick={onReject} disabled={disabled} variant="outline" className="flex-1"><X className="h-4 w-4 mr-1" />Rejeter</Button>
           </div>
+          {existing && editing && (
+            <Button variant="ghost" size="sm" className="mt-2 w-full h-8" onClick={onCancel}>Annuler</Button>
+          )}
         </>
       )}
     </Card>
