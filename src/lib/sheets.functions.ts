@@ -412,6 +412,7 @@ Règles strictes :
 - Format : { "resume": string (1 phrase factuelle sur ce qui a été fait), "score": number (0-100, basé sur l'avancement réel), "priorites": string[] (0-4 actions concrètes UNIQUEMENT si utile ; sinon []), "risques": string[] (0-3 points UNIQUEMENT s'il y a un vrai signal ; sinon []), "encouragement": string (1 phrase, dis "Bravo" quand l'avancement est bon) }
 - INTERDIT : conseils génériques, banalités, remplissage. Si tout va bien, "priorites" et "risques" doivent être des tableaux vides [] et l'encouragement doit féliciter explicitement.
 - Ne mentionne un risque QUE s'il est visible dans les données : tâche à faible avancement, tâche reportée sans motif, journée travaillée sans tâche, note du jour vide alors que des difficultés sont probables, tâche en statut "paused" (suspendue) sans motif ou depuis plusieurs jours.
+- DÉTECTION DE PATTERNS : si tu vois plusieurs jours de suite avec peu de tâches ou si les tâches sont concentrées le vendredi, mentionne-le avec bienveillance dans "risques".
 - Si des tâches sont suspendues ("paused") : suggère de les clôturer ou de les reporter si elles ne sont plus prioritaires dans "priorites".
 - Ne recommande une priorité QUE si elle cible une tâche précise (cite-la brièvement) ou un manque précis.
 - Si aucune tâche n'a été saisie du tout : resume factuel, score 0, une seule priorité = "Commencer à saisir les tâches de la semaine", pas de faux risques.
