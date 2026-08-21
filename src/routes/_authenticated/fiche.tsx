@@ -392,7 +392,7 @@ function SubmitWithConfirmation({
 const BILAN_FIELDS = [
   { key: "bilan_realisations" as const, label: "Principales réalisations", placeholder: "Livrables clefs, succès, deals…" },
   { key: "bilan_dossiers" as const,     label: "Dossiers en cours",         placeholder: "Sujets ouverts, statut, échéance…" },
-  { key: "bilan_difficultes" as const,  label: "Difficultés rencontrées",   placeholder: "Points de blocage, dépendances…" },
+  
   { key: "bilan_actions" as const,      label: "Actions prévues (semaine prochaine)", placeholder: "Priorités, objectifs…" },
 ];
 
@@ -428,7 +428,7 @@ function BilanSection({
       const newValues = {
         bilan_realisations: result.realisations,
         bilan_dossiers: result.dossiers,
-        bilan_difficultes: result.difficultes,
+        
         bilan_actions: result.actions,
       };
       setValues(prev => ({ ...prev, ...newValues }));
