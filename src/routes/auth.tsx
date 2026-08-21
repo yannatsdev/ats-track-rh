@@ -53,7 +53,10 @@ function AuthPage() {
         navigate({ to: "/dashboard" });
       }
     } catch (err) {
-      toast.error((err as Error).message);
+      const error = err as any;
+      const message = error.message || error.error_description || "Une erreur est survenue lors de la connexion.";
+      console.error("Auth error:", error);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

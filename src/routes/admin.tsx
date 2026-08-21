@@ -71,7 +71,10 @@ function AdminLoginPage() {
       toast.success("Bienvenue dans l'espace admin.");
       navigate({ to: "/admin/dashboard", replace: true });
     } catch (err) {
-      toast.error((err as Error).message);
+      const error = err as any;
+      const message = error.message || error.error_description || "Une erreur est survenue lors de la connexion.";
+      console.error("Admin Auth error:", error);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
