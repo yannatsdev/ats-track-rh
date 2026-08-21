@@ -497,7 +497,7 @@ function DayNoteCard({
     ? Math.round((nonPausedEntries.filter(e => e.statut === "done").length / nonPausedEntries.length) * 100)
     : 0;
 
-  const [diff, setDiff] = useState(initial?.difficultes ?? "");
+  const diff = initial?.difficultes ?? "";
   const [obs, setObs] = useState(initial?.observations ?? "");
   
   const commit = () => onSave({ 
@@ -567,9 +567,9 @@ function EntryRow({ entry, disabled, onSave, onDelete, onReport }: {
             onBlur={(e) => commit({ tache: e.target.value })} disabled={disabled} className="mt-1" placeholder="Ajouter une tâche..." />
         </div>
         <div>
-          <Label className="text-xs">Résultat obtenu</Label>
+          <Label className="text-xs">Observations</Label>
           <Input value={local.resultat} onChange={(e) => patch({ resultat: e.target.value })}
-            onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" placeholder="Résultat attendu / obtenu" />
+            onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" placeholder="Observations sur la tâche…" />
         </div>
         <div>
           <Label className="text-xs">Statut</Label>
