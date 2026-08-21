@@ -13,8 +13,8 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge, type Statut } from "@/components/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock, Circle, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
@@ -50,26 +50,42 @@ function FichePage() {
     queryFn: () => getSheet({ data: { weekStart } }),
   });
 
-  const [activeDay, setActiveDay] = useState("1");
+  const [activeDay, setActiveDay] = useState(() => {
+    const d = new Date().getDay();
+    return d >= 1 && d <= 5 ? String(d) : "1";
+  });
   const [saving, setSaving] = useState(false);
 
   const entries = ((data?.entries ?? []) as unknown as Entry[]);
   const dayNotes = ((data?.dayNotes ?? []) as unknown as DayNote[]);
   const sheet = data?.sheet;
 
-  const completion = useMemo(() => {
-    if (!entries.length) return 0;
-    return Math.round(entries.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / entries.length);
-  }, [entries]);
+  const daysWithData = useMemo(() => {
+    const days = new Set<number>();
+    for (let i = 1; i <= 5; i++) {
+      const hasTask = entries.some((e) => e.day === i && e.tache.trim().length > 0 && e.tache !== "Nouvelle tâche");
+      const hasNote = dayNotes.some((n) => n.day === i && (n.observations?.trim() || n.difficultes?.trim()));
+      if (hasTask || hasNote) days.add(i);
+    }
+    return days;
+  }, [entries, dayNotes]);
 
-  const dayComplete = (d: number) => entries.some((e) => e.day === d && e.tache.trim().length > 0);
+  const completion = Math.round((daysWithData.size / 5) * 100);
+
+  const dayStatus = (d: number) => {
+    const dayEntries = entries.filter((e) => e.day === d);
+    const hasRealTask = dayEntries.some((e) => e.tache.trim().length > 0 && e.tache !== "Nouvelle tâche");
+    if (!hasRealTask) return "empty";
+    const allDone = dayEntries.every((e) => e.statut === "done" || e.avancement_pct === 100);
+    return allDone ? "complete" : "in_progress";
+  };
 
   async function addRow(day: number) {
     if (!sheet) return;
     setSaving(true);
     try {
       await upsert({ data: {
-        sheet_id: sheet.id, day, heure: "", tache: "Nouvelle tâche", resultat: "",
+        sheet_id: sheet.id, day, heure: "", tache: "", resultat: "",
         statut: "in_progress", motif_report: "", avancement_pct: 0,
         position: entries.filter((e) => e.day === day).length,
       }});
@@ -130,9 +146,13 @@ function FichePage() {
             ) : locked ? (
               <EditRequestButton sheetId={sheet.id} editStatus={editStatus} weekStart={weekStart} />
             ) : (
-              <Button onClick={submitSheet} disabled={submitted || saving || entries.length === 0} className="font-semibold">
-                <Send className="h-4 w-4 mr-2" />{submitted ? "Soumise" : "Soumettre la fiche"}
-              </Button>
+              <SubmitWithConfirmation
+                sheet={sheet}
+                daysCount={daysWithData.size}
+                notesCount={dayNotes.filter(n => n.observations?.trim() || n.difficultes?.trim()).length}
+                disabled={submitted || saving || entries.length === 0}
+                onConfirm={submitSheet}
+              />
             )}
             {!submitted && (
               <span className={`text-[11px] flex items-center gap-1 ${isFriday ? "text-emerald-600" : "text-muted-foreground"}`}>
@@ -153,32 +173,50 @@ function FichePage() {
         }
       />
 
-      <CoachCard
-        sheetId={sheet.id}
-        entries={entries}
-        dayNotes={dayNotes}
-        submitted={submitted}
-        isFriday={isFriday}
-        dow={dow}
-      />
-
-      <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium">Progression globale de la semaine</div>
-          <div className="text-sm font-bold text-primary">{completion}%</div>
-        </div>
-        <Progress value={completion} className="h-2" />
-      </Card>
+      <div className="flex flex-wrap gap-4 mb-6">
+        <Card className="flex-1 min-w-[240px] p-5 rounded-2xl border-0 shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium">Progression de la semaine</div>
+            <div className="text-sm font-bold text-primary">{completion}%</div>
+          </div>
+          <Progress value={completion} className="h-2" />
+        </Card>
+        <Card className="px-5 py-3 rounded-2xl border-0 shadow-[var(--shadow-card)] flex items-center gap-4">
+          <div className="text-center">
+            <div className="text-lg font-bold text-primary">{daysWithData.size}/5</div>
+            <div className="text-[10px] uppercase text-muted-foreground">Jours</div>
+          </div>
+          <div className="w-px h-8 bg-border" />
+          <div className="text-center">
+            <div className="text-lg font-bold text-primary">
+              {dayNotes.filter(n => n.observations?.trim() || n.difficultes?.trim()).length}
+            </div>
+            <div className="text-[10px] uppercase text-muted-foreground">Notes</div>
+          </div>
+        </Card>
+      </div>
 
       <Tabs value={activeDay} onValueChange={setActiveDay}>
         <TabsList className="grid grid-cols-5 h-auto p-1 bg-secondary rounded-2xl">
           {DAY_LABELS.map((d, i) => {
-            const done = dayComplete(i + 1);
+            const status = dayStatus(i + 1);
+            const dayEntries = entries.filter(e => e.day === i + 1 && e.tache.trim().length > 0);
             return (
               <TabsTrigger key={d} value={String(i + 1)}
                 className="flex flex-col gap-1 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-xl">
                 <span className="text-xs md:text-sm font-medium">{d}</span>
-                {done && <Check className="h-3 w-3 text-emerald-500" />}
+                <div className="flex flex-col items-center">
+                  {status === "complete" ? (
+                    <Check className="h-3 w-3 text-emerald-500" />
+                  ) : status === "in_progress" ? (
+                    <Circle className="h-2 w-2 fill-orange-400 text-orange-400" />
+                  ) : (
+                    <Circle className="h-2 w-2 text-muted-foreground/30" />
+                  )}
+                  <span className="text-[9px] text-muted-foreground mt-0.5">
+                    {dayEntries.length > 0 ? `${dayEntries.length} tâche${dayEntries.length > 1 ? "s" : ""}` : "vide"}
+                  </span>
+                </div>
               </TabsTrigger>
             );
           })}
@@ -231,8 +269,64 @@ function FichePage() {
         })}
       </Tabs>
 
+      <CoachCard
+        sheetId={sheet.id}
+        entries={entries}
+        dayNotes={dayNotes}
+        submitted={submitted}
+        isFriday={isFriday}
+        dow={dow}
+      />
+
       <BilanSection sheetId={sheet.id} initial={sheet} disabled={submitted} />
     </div>
+  );
+}
+
+function SubmitWithConfirmation({
+  sheet, daysCount, notesCount, disabled, onConfirm,
+}: {
+  sheet: any; daysCount: number; notesCount: number; disabled: boolean; onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const incomplete = daysCount < 5 || notesCount < daysCount;
+
+  if (!incomplete) {
+    return (
+      <Button onClick={onConfirm} disabled={disabled} className="font-semibold">
+        <Send className="h-4 w-4 mr-2" />Soumettre la fiche
+      </Button>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button disabled={disabled} className="font-semibold bg-primary/90 hover:bg-primary">
+          <Send className="h-4 w-4 mr-2" />Soumettre la fiche
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-orange-500" />
+            Fiche incomplète
+          </DialogTitle>
+          <DialogDescription>
+            Votre fiche n'est pas totalement renseignée :
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 space-y-2 text-sm">
+          <p>• <strong>{daysCount}/5 jours</strong> travaillés renseignés.</p>
+          <p>• <strong>{notesCount}/{daysCount || 1} notes</strong> du jour complétées.</p>
+          <p className="mt-4 font-medium text-destructive">Soumettre quand même au RH ?</p>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Continuer à remplir</Button>
+          <Button onClick={() => { setOpen(false); onConfirm(); }}>Confirmer la soumission</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -361,12 +455,12 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
         <div>
           <Label className="text-xs">Tâche réalisée</Label>
           <Input value={local.tache} onChange={(e) => patch({ tache: e.target.value })}
-            onBlur={(e) => commit({ tache: e.target.value })} disabled={disabled} className="mt-1" />
+            onBlur={(e) => commit({ tache: e.target.value })} disabled={disabled} className="mt-1" placeholder="Ajouter une tâche..." />
         </div>
         <div>
           <Label className="text-xs">Résultat obtenu</Label>
           <Input value={local.resultat} onChange={(e) => patch({ resultat: e.target.value })}
-            onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" />
+            onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" placeholder="Résultat attendu / obtenu" />
         </div>
         <div>
           <Label className="text-xs">Statut</Label>
