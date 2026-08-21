@@ -41,8 +41,9 @@ export const upsertDailyEntry = createServerFn({ method: "POST" })
       heure: z.string().optional().default(""),
       tache: z.string(),
       resultat: z.string().optional().default(""),
-      statut: z.enum(["done", "in_progress", "postponed"]),
+      statut: z.enum(["done", "in_progress", "postponed", "paused", "blocked"]),
       motif_report: z.string().optional().default(""),
+      motif_pause: z.string().optional().default(""),
       position: z.number().int().default(0),
     }).parse(d),
   )

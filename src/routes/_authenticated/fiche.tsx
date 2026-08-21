@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/fiche")({
 
 type Entry = {
   id?: string; sheet_id: string; day: number; heure: string; tache: string;
-  resultat: string; statut: Statut; motif_report: string; position: number;
+  resultat: string; statut: Statut; motif_report: string; motif_pause: string; position: number;
 };
 type DayNote = {
   id?: string; sheet_id: string; day: number;
