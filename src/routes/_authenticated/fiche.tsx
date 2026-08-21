@@ -15,10 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock, Circle, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
-  getCoachAdvice, requestSheetEdit,
+  getCoachAdvice, requestSheetEdit, generateAIBilan,
 } from "@/lib/sheets.functions";
 import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
 
@@ -152,9 +153,10 @@ function FichePage() {
             ) : (
               <SubmitWithConfirmation
                 sheet={sheet}
+                entries={entries}
                 daysCount={daysWithData.size}
                 notesCount={dayNotes.filter(n => n.observations?.trim() || n.difficultes?.trim()).length}
-                disabled={submitted || saving || entries.length === 0}
+                disabled={submitted || saving}
                 onConfirm={submitSheet}
               />
             )}
@@ -231,8 +233,13 @@ function FichePage() {
           return (
             <TabsContent key={d} value={String(day)} className="mt-6 space-y-4">
               {dayEntries.length === 0 && (
-                <Card className="p-10 rounded-2xl border-dashed border-2 text-center text-muted-foreground">
-                  Aucune tâche pour {d}. Ajoutez la première.
+                <Card className="p-10 rounded-2xl border-dashed border-2 text-center text-muted-foreground flex flex-col items-center gap-4">
+                  <p>Aucune tâche pour {d}. Ajoutez la première.</p>
+                  {!submitted && (
+                    <Button variant="outline" size="sm" onClick={() => addRow(day)}>
+                      <Plus className="h-4 w-4 mr-2" /> Ajouter la 1ère tâche
+                    </Button>
+                  )}
                 </Card>
               )}
               {dayEntries.map((entry) => (
@@ -288,19 +295,42 @@ function FichePage() {
 }
 
 function SubmitWithConfirmation({
-  sheet, daysCount, notesCount, disabled, onConfirm,
+  sheet, entries, daysCount, notesCount, disabled, onConfirm,
 }: {
-  sheet: any; daysCount: number; notesCount: number; disabled: boolean; onConfirm: () => void;
+  sheet: any; entries: any[]; daysCount: number; notesCount: number; disabled: boolean; onConfirm: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const incomplete = daysCount < 5 || notesCount < daysCount;
+  
+  const canSubmit = entries.length > 0 && daysCount >= 5 && notesCount >= daysCount;
+  const isActuallyDisabled = disabled || !canSubmit;
+
+  let tooltipMsg = "";
+  if (entries.length === 0) tooltipMsg = "Ajoutez au moins une tâche pour soumettre.";
+  else if (daysCount < 5) tooltipMsg = `${5 - daysCount} jour(s) incomplet(s) — ajoutez au moins une tâche par jour.`;
+  else if (notesCount < daysCount) tooltipMsg = "Notes du jour manquantes pour certains jours.";
+
+  const content = (
+    <Button onClick={onConfirm} disabled={isActuallyDisabled} className="font-semibold">
+      <Send className="h-4 w-4 mr-2" />Soumettre la fiche
+    </Button>
+  );
+
+  if (isActuallyDisabled && !disabled && tooltipMsg) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="inline-block">{content}</div>
+          </TooltipTrigger>
+          <TooltipContent>{tooltipMsg}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   if (!incomplete) {
-    return (
-      <Button onClick={onConfirm} disabled={disabled} className="font-semibold">
-        <Send className="h-4 w-4 mr-2" />Soumettre la fiche
-      </Button>
-    );
+    return content;
   }
 
   return (
@@ -353,6 +383,8 @@ function BilanSection({
   const update = useServerFn(updateSheet);
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const generateFn = useServerFn(generateAIBilan);
 
   async function save() {
     setSaving(true);
@@ -362,6 +394,27 @@ function BilanSection({
       await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
     } catch (e) { toast.error((e as Error).message); }
     finally { setSaving(false); }
+  }
+
+  async function handleGenerate() {
+    setGenerating(true);
+    try {
+      const result = await generateFn({ data: { sheet_id: sheetId } });
+      const newValues = {
+        bilan_realisations: result.realisations,
+        bilan_dossiers: result.dossiers,
+        bilan_difficultes: result.difficultes,
+        bilan_actions: result.actions,
+      };
+      setValues(prev => ({ ...prev, ...newValues }));
+      // We need to also update the UI, but Textarea uses defaultValue or controlled value. 
+      // Since it's currently using defaultValue, we'll force a re-render or switch to controlled.
+      toast.success("Bilan généré avec l'IA. N'oubliez pas d'enregistrer.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setGenerating(false);
+    }
   }
 
   return (
@@ -376,9 +429,15 @@ function BilanSection({
             Synthèse hebdomadaire à destination de votre manager et au RH.
           </p>
         </div>
-        <Button onClick={save} disabled={saving || disabled} size="sm">
-          <Save className="h-4 w-4 mr-2" />Enregistrer
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleGenerate} disabled={generating || disabled} size="sm" variant="outline" className="text-xs">
+            {generating ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <Sparkles className="h-3 w-3 mr-2" />}
+            Générer avec l'IA
+          </Button>
+          <Button onClick={save} disabled={saving || disabled} size="sm">
+            <Save className="h-4 w-4 mr-2" />Enregistrer
+          </Button>
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {BILAN_FIELDS.map((f) => (
@@ -386,7 +445,7 @@ function BilanSection({
             <Label className="text-sm font-semibold">{f.label}</Label>
             <Textarea
               rows={5}
-              defaultValue={(initial[f.key] as string | null) ?? ""}
+              value={values[f.key] !== undefined ? values[f.key] : ((initial[f.key] as string | null) ?? "")}
               placeholder={f.placeholder}
               disabled={disabled}
               onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
@@ -436,7 +495,9 @@ function DayNoteCard({
               <span className="text-xs font-bold text-primary w-8">{calculatedAvc}%</span>
             </div>
             <p className="text-[10px] text-muted-foreground italic">
-              Basée sur les tâches terminées ({dayEntries.filter(e => e.statut === "done").length}/{dayEntries.length})
+              {dayEntries.length > 0
+                ? `Basée sur les tâches terminées (${dayEntries.filter(e => e.statut === "done").length}/${dayEntries.length})`
+                : "Aucune tâche pour l'instant"}
             </p>
           </div>
           <div className="space-y-2">

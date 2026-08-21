@@ -449,3 +449,56 @@ Règles strictes :
       avancement_global: avg,
     };
   });
+
+export const generateAIBilan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ sheet_id: z.string() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const [sheetRes, entriesRes, notesRes] = await Promise.all([
+      supabase.from("weekly_sheets").select("*").eq("id", data.sheet_id).eq("user_id", userId).single(),
+      supabase.from("daily_entries").select("*").eq("sheet_id", data.sheet_id).order("day").order("position"),
+      supabase.from("day_notes").select("*").eq("sheet_id", data.sheet_id),
+    ]);
+    if (!sheetRes.data) throw new Error("Fiche introuvable");
+    const entries = entriesRes.data ?? [];
+    const notes = notesRes.data ?? [];
+
+    const summary = {
+      taches: entries.map(e => ({ day: e.day, tache: e.tache, statut: e.statut, resultat: e.resultat })),
+      notes: notes.map(n => ({ day: n.day, difficultes: n.difficultes, observations: n.observations, motif_report: n.motif_report }))
+    };
+
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("IA indisponible.");
+
+    const system = `Tu es un assistant RH. Ta mission est d'agréger les tâches journalières d'un employé pour générer un bilan hebdomadaire structuré.
+Retourne UNIQUEMENT du JSON strict : { "realisations": string, "dossiers": string, "difficultes": string, "actions": string }
+- realisations : Synthèse des tâches "done".
+- dossiers : Synthèse des tâches "in_progress".
+- difficultes : Agrégation des difficultés et motifs de report.
+- actions : Déductions pour la semaine prochaine basées sur le travail en cours.
+Sois concis et professionnel.`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: JSON.stringify(summary) },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!res.ok) throw new Error("Erreur IA");
+    const json = await res.json() as any;
+    const content = JSON.parse(json.choices[0].message.content);
+    return {
+      realisations: content.realisations ?? "",
+      dossiers: content.dossiers ?? "",
+      difficultes: content.difficultes ?? "",
+      actions: content.actions ?? "",
+    };
+  });
