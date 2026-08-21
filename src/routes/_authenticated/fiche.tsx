@@ -111,7 +111,10 @@ function FichePage() {
 
   async function submitSheet() {
     if (!sheet) return;
-    await update({ data: { id: sheet.id, avancement_global: completion, status: "submitted" } });
+    const done = entries.filter((e) => e.statut === "done").length;
+    const total = Math.max(entries.length, 1);
+    const calculatedAvc = Math.round((done / total) * 100);
+    await update({ data: { id: sheet.id, avancement_global: calculatedAvc, status: "submitted" } });
     toast.success("Fiche soumise pour validation");
     await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
   }

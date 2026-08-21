@@ -47,6 +47,9 @@ function EmpSheet() {
   }
 
   const { sheet, entries, profile, validations, dayNotes } = data;
+  const globalProgress = entries.length 
+    ? Math.round((entries.filter(e => e.statut === "done").length / entries.length) * 100)
+    : 0;
   const canHR = me.roles.includes("hr") || me.roles.includes("admin");
   const canDir = me.roles.includes("direction") || me.roles.includes("admin");
   const showCoach = me.roles.includes("direction") || me.roles.includes("admin");
@@ -67,6 +70,12 @@ function EmpSheet() {
       <PageHeader
         title={`${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`}
         subtitle={`${profile?.fonction ?? "—"} · ${profile?.service ?? "—"} · Semaine du ${formatWeekRange(sheet.week_start)}`}
+        actions={
+          <div className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 text-right">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Progression globale</div>
+            <div className="text-xl font-bold text-primary">{globalProgress}%</div>
+          </div>
+        }
       />
       {editReq.edit_request_status === "pending" && (
         <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] mb-4 bg-amber-50">
