@@ -21,6 +21,7 @@ export type Database = {
           day: number
           heure: string | null
           id: string
+          motif_pause: string | null
           motif_report: string | null
           position: number
           resultat: string | null
@@ -34,6 +35,7 @@ export type Database = {
           day: number
           heure?: string | null
           id?: string
+          motif_pause?: string | null
           motif_report?: string | null
           position?: number
           resultat?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           day?: number
           heure?: string | null
           id?: string
+          motif_pause?: string | null
           motif_report?: string | null
           position?: number
           resultat?: string | null
@@ -462,7 +465,7 @@ export type Database = {
         | "hr_validated"
         | "direction_validated"
         | "rejected"
-      task_status: "done" | "in_progress" | "postponed"
+      task_status: "done" | "in_progress" | "postponed" | "paused" | "blocked"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -606,7 +609,7 @@ export const Constants = {
         "direction_validated",
         "rejected",
       ],
-      task_status: ["done", "in_progress", "postponed"],
+      task_status: ["done", "in_progress", "postponed", "paused", "blocked"],
     },
   },
 } as const

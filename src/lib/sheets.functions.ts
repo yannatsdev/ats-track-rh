@@ -41,8 +41,9 @@ export const upsertDailyEntry = createServerFn({ method: "POST" })
       heure: z.string().optional().default(""),
       tache: z.string(),
       resultat: z.string().optional().default(""),
-      statut: z.enum(["done", "in_progress", "postponed"]),
+      statut: z.enum(["done", "in_progress", "postponed", "paused", "blocked"]),
       motif_report: z.string().optional().default(""),
+      motif_pause: z.string().optional().default(""),
       position: z.number().int().default(0),
     }).parse(d),
   )
@@ -360,8 +361,9 @@ export const getCoachAdvice = createServerFn({ method: "POST" })
       return { label, tasks: de, note };
     });
 
-    const avg = entries.length
-      ? Math.round((entries.filter(e => e.statut === 'done').length / entries.length) * 100)
+    const meaningfulEntries = entries.filter(e => e.tache.trim().length > 0 && e.statut !== "paused");
+    const avg = meaningfulEntries.length
+      ? Math.round((meaningfulEntries.filter(e => e.statut === 'done').length / meaningfulEntries.length) * 100)
       : 0;
     const summary = {
       employe: `${profile?.first_name ?? ""} ${profile?.last_name ?? ""} — ${profile?.fonction ?? "?"} / ${profile?.service ?? "?"}`,
@@ -375,12 +377,13 @@ export const getCoachAdvice = createServerFn({ method: "POST" })
       jours: perDay.map((d) => ({
         jour: d.label,
         nb_taches: d.tasks.length,
-        avancement_moyen: d.tasks.length
-          ? Math.round((d.tasks.filter(e => e.statut === 'done').length / d.tasks.length) * 100)
-          : 0,
+        avancement_moyen: (() => {
+          const m = d.tasks.filter(t => t.tache.trim().length > 0 && t.statut !== "paused");
+          return m.length ? Math.round((m.filter(t => t.statut === 'done').length / m.length) * 100) : 0;
+        })(),
         taches: d.tasks.map((t) => ({
           heure: t.heure, tache: t.tache, resultat: t.resultat,
-          statut: t.statut, resultats: t.resultat, motif_report: t.motif_report,
+          statut: t.statut, resultats: t.resultat, motif_report: t.motif_report, motif_pause: t.motif_pause,
         })),
         note_du_jour: d.note ? {
           avancement: d.note.avancement_pct,
@@ -408,7 +411,8 @@ Règles strictes :
 - Retourne UNIQUEMENT du JSON strict, sans markdown, sans texte hors JSON.
 - Format : { "resume": string (1 phrase factuelle sur ce qui a été fait), "score": number (0-100, basé sur l'avancement réel), "priorites": string[] (0-4 actions concrètes UNIQUEMENT si utile ; sinon []), "risques": string[] (0-3 points UNIQUEMENT s'il y a un vrai signal ; sinon []), "encouragement": string (1 phrase, dis "Bravo" quand l'avancement est bon) }
 - INTERDIT : conseils génériques, banalités, remplissage. Si tout va bien, "priorites" et "risques" doivent être des tableaux vides [] et l'encouragement doit féliciter explicitement.
-- Ne mentionne un risque QUE s'il est visible dans les données : tâche à faible avancement, tâche reportée sans motif, journée travaillée sans tâche, note du jour vide alors que des difficultés sont probables.
+- Ne mentionne un risque QUE s'il est visible dans les données : tâche à faible avancement, tâche reportée sans motif, journée travaillée sans tâche, note du jour vide alors que des difficultés sont probables, tâche en statut "paused" (suspendue) sans motif ou depuis plusieurs jours.
+- Si des tâches sont suspendues ("paused") : suggère de les clôturer ou de les reporter si elles ne sont plus prioritaires dans "priorites".
 - Ne recommande une priorité QUE si elle cible une tâche précise (cite-la brièvement) ou un manque précis.
 - Si aucune tâche n'a été saisie du tout : resume factuel, score 0, une seule priorité = "Commencer à saisir les tâches de la semaine", pas de faux risques.
 - Si toutes les tâches sont "done" à 100% : dis Bravo, score élevé, priorites=[], risques=[].
@@ -465,7 +469,7 @@ export const generateAIBilan = createServerFn({ method: "POST" })
     const notes = notesRes.data ?? [];
 
     const summary = {
-      taches: entries.map(e => ({ day: e.day, tache: e.tache, statut: e.statut, resultat: e.resultat })),
+      taches: entries.map(e => ({ day: e.day, tache: e.tache, statut: e.statut, resultat: e.resultat, motif_pause: e.motif_pause })),
       notes: notes.map(n => ({ day: n.day, difficultes: n.difficultes, observations: n.observations, motif_report: n.motif_report }))
     };
 
@@ -475,9 +479,9 @@ export const generateAIBilan = createServerFn({ method: "POST" })
     const system = `Tu es un assistant RH. Ta mission est d'agréger les tâches journalières d'un employé pour générer un bilan hebdomadaire structuré.
 Retourne UNIQUEMENT du JSON strict : { "realisations": string, "dossiers": string, "difficultes": string, "actions": string }
 - realisations : Synthèse des tâches "done".
-- dossiers : Synthèse des tâches "in_progress".
-- difficultes : Agrégation des difficultés et motifs de report.
-- actions : Déductions pour la semaine prochaine basées sur le travail en cours.
+- dossiers : Synthèse des tâches "in_progress", "paused" (suspendues) et "blocked" (bloquées). Mentionne explicitement les blocages.
+- difficultes : Agrégation des difficultés, motifs de report, suspensions et blocages.
+- actions : Déductions pour la semaine prochaine basées sur le travail en cours ou bloqué.
 Sois concis et professionnel.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

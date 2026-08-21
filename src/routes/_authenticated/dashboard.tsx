@@ -28,20 +28,26 @@ function Dashboard() {
   const entries = data?.entries ?? [];
   const done = entries.filter((e) => e.statut === "done").length;
   const ongoing = entries.filter((e) => e.statut === "in_progress").length;
+  const paused = entries.filter((e) => e.statut === "paused").length;
+  const blocked = entries.filter((e) => e.statut === "blocked").length;
   const postponed = entries.filter((e) => e.statut === "postponed").length;
-  const total = Math.max(entries.length, 1);
+  const meaningfulEntries = entries.filter(e => e.tache.trim().length > 0 && e.statut !== "paused");
+  const total = Math.max(meaningfulEntries.length, 1);
   const globalProgress = data?.sheet?.avancement_global ?? Math.round((done / total) * 100);
 
   const dayData = DAY_LABELS.map((d, i) => {
-    const dayEntries = entries.filter((e) => e.day === i + 1);
-    const avg = dayEntries.length
-      ? Math.round((dayEntries.filter(e => e.statut === "done").length / dayEntries.length) * 100) : 0;
+    const dayEntries = entries.filter((e) => e.day === i + 1 && e.tache.trim().length > 0);
+    const nonPaused = dayEntries.filter(e => e.statut !== "paused");
+    const avg = nonPaused.length
+      ? Math.round((nonPaused.filter(e => e.statut === "done").length / nonPaused.length) * 100) : 0;
     return { day: d.slice(0, 3), avancement: avg, "Terminée": dayEntries.filter((e) => e.statut === "done").length };
   });
 
   const donut = [
     { name: "Terminée", value: done, color: "oklch(0.68 0.16 148)" },
     { name: "En cours", value: ongoing, color: "oklch(0.78 0.14 78)" },
+    { name: "Suspendue", value: paused, color: "oklch(0.6 0 0)" },
+    { name: "Bloquée", value: blocked, color: "oklch(0.6 0.22 27)" },
     { name: "Reportée", value: postponed, color: "oklch(0.6 0.22 27)" },
   ];
 

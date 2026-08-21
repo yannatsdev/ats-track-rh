@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/fiche")({
 
 type Entry = {
   id?: string; sheet_id: string; day: number; heure: string; tache: string;
-  resultat: string; statut: Statut; motif_report: string; position: number;
+  resultat: string; statut: Statut; motif_report: string; motif_pause: string; position: number;
 };
 type DayNote = {
   id?: string; sheet_id: string; day: number;
@@ -79,7 +79,9 @@ function FichePage() {
     const dayEntries = entries.filter((e) => e.day === d && e.tache.trim().length > 0);
     if (dayEntries.length === 0) return "empty";
     const allDone = dayEntries.every((e) => e.statut === "done");
-    return allDone ? "complete" : "in_progress";
+    const anyPaused = dayEntries.some((e) => e.statut === "paused");
+    const anyBlocked = dayEntries.some((e) => e.statut === "blocked");
+    return allDone ? "complete" : anyBlocked ? "blocked" : anyPaused ? "paused" : "in_progress";
   };
 
   async function addRow(day: number) {
@@ -113,7 +115,8 @@ function FichePage() {
   async function submitSheet() {
     if (!sheet) return;
     const done = entries.filter((e) => e.statut === "done").length;
-    const total = Math.max(entries.length, 1);
+    const meaningfulTasks = entries.filter(e => e.tache.trim().length > 0 && e.statut !== "paused");
+    const total = Math.max(meaningfulTasks.length, 1);
     const calculatedAvc = Math.round((done / total) * 100);
     await update({ data: { id: sheet.id, avancement_global: calculatedAvc, status: "submitted" } });
     toast.success("Fiche soumise pour validation");
@@ -214,6 +217,10 @@ function FichePage() {
                 <div className="flex flex-col items-center">
                   {status === "complete" ? (
                     <Check className="h-3 w-3 text-emerald-500" />
+                  ) : status === "blocked" ? (
+                    <Circle className="h-2 w-2 fill-red-500 text-red-500" />
+                  ) : status === "paused" ? (
+                    <Circle className="h-2 w-2 fill-slate-400 text-slate-400" />
                   ) : status === "in_progress" ? (
                     <Circle className="h-2 w-2 fill-orange-400 text-orange-400" />
                   ) : (
@@ -467,8 +474,9 @@ function DayNoteCard({
   const [motif, setMotif] = useState(initial?.motif_report ?? "");
   const entriesData = (useQueryClient().getQueryData(["current-sheet", isoWeekStart()]) as any)?.entries || [];
   const dayEntries = (entriesData as any[]).filter(e => e.day === day && e.tache.trim().length > 0);
-  const calculatedAvc = dayEntries.length 
-    ? Math.round((dayEntries.filter(e => e.statut === "done").length / dayEntries.length) * 100)
+  const nonPausedEntries = dayEntries.filter(e => e.statut !== "paused");
+  const calculatedAvc = nonPausedEntries.length 
+    ? Math.round((nonPausedEntries.filter(e => e.statut === "done").length / nonPausedEntries.length) * 100)
     : 0;
 
   const [diff, setDiff] = useState(initial?.difficultes ?? "");
@@ -496,7 +504,7 @@ function DayNoteCard({
             </div>
             <p className="text-[10px] text-muted-foreground italic">
               {dayEntries.length > 0
-                ? `Basée sur les tâches terminées (${dayEntries.filter(e => e.statut === "done").length}/${dayEntries.length})`
+                ? `Basée sur les tâches terminées (${dayEntries.filter(e => e.statut === "done").length}/${nonPausedEntries.length || 1}) ${dayEntries.some(e => e.statut === "paused") ? "(Tâches suspendues exclues)" : ""}`
                 : "Aucune tâche pour l'instant"}
             </p>
           </div>
@@ -529,7 +537,7 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
   function commit(p: Partial<Entry>) { const next = { ...local, ...p }; setLocal(next); onSave(next as Entry); }
   return (
     <Card className="p-4 rounded-2xl border shadow-sm">
-      <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_150px_40px] items-start">
+      <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_180px_40px] items-start">
         <div>
           <Label className="text-xs">Heure</Label>
           <Input value={local.heure} onChange={(e) => patch({ heure: e.target.value })}
@@ -552,6 +560,8 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
             <SelectContent>
               <SelectItem value="done"><StatusBadge statut="done" /></SelectItem>
               <SelectItem value="in_progress"><StatusBadge statut="in_progress" /></SelectItem>
+              <SelectItem value="paused"><StatusBadge statut="paused" /></SelectItem>
+              <SelectItem value="blocked"><StatusBadge statut="blocked" /></SelectItem>
               <SelectItem value="postponed"><StatusBadge statut="postponed" /></SelectItem>
             </SelectContent>
           </Select>
@@ -567,6 +577,22 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
           <Input value={local.motif_report} onChange={(e) => patch({ motif_report: e.target.value })}
             onBlur={(e) => commit({ motif_report: e.target.value })} disabled={disabled}
             placeholder="Ex : ressource indisponible…" className="mt-1" />
+        </div>
+      )}
+      {local.statut === "blocked" && (
+        <div className="mt-3">
+          <Label className="text-xs">Motif du blocage</Label>
+          <Input value={local.motif_pause} onChange={(e) => patch({ motif_pause: e.target.value })}
+            onBlur={(e) => commit({ motif_pause: e.target.value })} disabled={disabled}
+            placeholder="Ex : ressource manquante, en attente de validation externe…" className="mt-1" />
+        </div>
+      )}
+      {local.statut === "paused" && (
+        <div className="mt-3">
+          <Label className="text-xs">Motif de la suspension</Label>
+          <Input value={local.motif_pause} onChange={(e) => patch({ motif_pause: e.target.value })}
+            onBlur={(e) => commit({ motif_pause: e.target.value })} disabled={disabled}
+            placeholder="Ex : en attente de retour client, priorité changée…" className="mt-1" />
         </div>
       )}
     </Card>

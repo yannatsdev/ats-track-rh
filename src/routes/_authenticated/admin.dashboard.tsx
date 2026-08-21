@@ -66,6 +66,8 @@ function AdminDashboard() {
   const allEntries = submittedSheets.flatMap((s) => (s.daily_entries ?? []) as { statut: string; day?: number }[]);
   const done = allEntries.filter((e) => e.statut === "done").length;
   const ongoing = allEntries.filter((e) => e.statut === "in_progress").length;
+  const paused = allEntries.filter((e) => e.statut === "paused").length;
+  const blocked = allEntries.filter((e) => e.statut === "blocked").length;
   const postponed = allEntries.filter((e) => e.statut === "postponed").length;
   const totalEntries = Math.max(allEntries.length, 1);
   const orgGlobalProgress = submittedSheets.length
@@ -81,6 +83,8 @@ function AdminDashboard() {
   const donut = [
     { name: "Terminée", value: done, color: "oklch(0.68 0.16 148)" },
     { name: "En cours", value: ongoing, color: "oklch(0.78 0.14 78)" },
+    { name: "Suspendue", value: paused, color: "oklch(0.6 0 0)" },
+    { name: "Bloquée", value: blocked, color: "oklch(0.6 0.22 27)" },
     { name: "Reportée", value: postponed, color: "oklch(0.6 0.22 27)" },
   ];
 
@@ -212,10 +216,10 @@ function AdminDashboard() {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={DAY_LABELS.map((d, i) => {
               const day = i + 1;
-              const relevantSheets = submittedSheets.filter(s => (s.daily_entries ?? []).some((e: any) => e.day === day && e.tache.trim().length > 0));
+              const relevantSheets = submittedSheets.filter(s => (s.daily_entries ?? []).some((e: any) => e.day === day && e.tache.trim().length > 0 && e.statut !== "paused"));
               const dailyAvg = relevantSheets.length 
                 ? Math.round(relevantSheets.reduce((acc, s) => {
-                    const de = (s.daily_entries ?? []).filter((e: any) => e.day === day && e.tache.trim().length > 0);
+                    const de = (s.daily_entries ?? []).filter((e: any) => e.day === day && e.tache.trim().length > 0 && e.statut !== "paused");
                     return acc + (de.length ? (de.filter((e: any) => e.statut === 'done').length / de.length) * 100 : 0);
                   }, 0) / relevantSheets.length)
                 : 0;

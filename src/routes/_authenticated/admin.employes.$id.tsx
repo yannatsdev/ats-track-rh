@@ -47,8 +47,9 @@ function EmpSheet() {
   }
 
   const { sheet, entries, profile, validations, dayNotes } = data;
-  const globalProgress = entries.length 
-    ? Math.round((entries.filter(e => e.statut === "done").length / entries.length) * 100)
+  const meaningfulEntries = entries.filter(e => e.tache.trim().length > 0 && e.statut !== "paused");
+  const globalProgress = meaningfulEntries.length 
+    ? Math.round((meaningfulEntries.filter(e => e.statut === "done").length / meaningfulEntries.length) * 100)
     : 0;
   const canHR = me.roles.includes("hr") || me.roles.includes("admin");
   const canDir = me.roles.includes("direction") || me.roles.includes("admin");
@@ -118,8 +119,12 @@ function EmpSheet() {
                 {entries.filter(e => e.day === day && e.tache.trim().length > 0).length > 0 && (
                   <div className="text-xs text-muted-foreground">
                     Avancement du jour : <span className="font-semibold text-primary">
-                      {Math.round((entries.filter(e => e.day === day && e.statut === "done").length / entries.filter(e => e.day === day && e.tache.trim().length > 0).length) * 100)}%
+                      {(() => {
+                        const dayTasks = entries.filter(e => e.day === day && e.tache.trim().length > 0 && e.statut !== "paused");
+                        return dayTasks.length ? Math.round((dayTasks.filter(e => e.statut === "done").length / dayTasks.length) * 100) : 0;
+                      })()}%
                     </span>
+                    {entries.some(e => e.day === day && e.statut === "paused") && <span className="ml-1 opacity-60">(Suspendues exclues)</span>}
                   </div>
                 )}
               </div>
@@ -129,10 +134,19 @@ function EmpSheet() {
                     <div className="text-xs text-muted-foreground">{e.heure || "—"}</div>
                     <div className="text-sm font-medium">{e.tache}</div>
                     <div className="text-sm text-muted-foreground">{e.resultat || "—"}</div>
-                    <StatusBadge statut={e.statut as "done" | "in_progress" | "postponed"} />
+                    <StatusBadge statut={e.statut as any} />
                   </div>
                 ))}
               </div>
+              {de.some(e => e.statut === "paused" && e.motif_pause) && (
+                <div className="mt-2 space-y-1">
+                  {de.filter(e => e.statut === "paused" && e.motif_pause).map(e => (
+                    <div key={`pause-${e.id}`} className="text-[11px] bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-100 italic">
+                      Suspension : {e.motif_pause}
+                    </div>
+                  ))}
+                </div>
+              )}
               {note && (note.motif_report || note.difficultes || note.observations) && (
                 <div className="grid gap-3 md:grid-cols-3 mt-4 pt-4 border-t text-sm">
                   {note.motif_report && (

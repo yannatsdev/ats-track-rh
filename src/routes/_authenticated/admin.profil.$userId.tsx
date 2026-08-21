@@ -36,7 +36,12 @@ function ProfilPage() {
   const submitted = sheets.filter((s) => s.status === "submitted").length;
   const drafts = sheets.filter((s) => s.status === "draft").length;
   const avg = total > 0 
-    ? Math.round(sheets.reduce((acc, s) => acc + (s.avancement_global || 0), 0) / total) 
+    ? Math.round(sheets.reduce((acc, s) => {
+        const entries = ((s as any).daily_entries ?? []) as any[];
+        const meaningful = entries.filter(e => (e.tache || "").trim().length > 0 && e.statut !== "paused");
+        if (meaningful.length === 0) return acc + (s.avancement_global || 0);
+        return acc + Math.round((entries.filter(e => e.statut === "done").length / meaningful.length) * 100);
+      }, 0) / total) 
     : 0;
 
   return (
