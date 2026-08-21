@@ -34,7 +34,7 @@ function Dashboard() {
   const dayData = DAY_LABELS.map((d, i) => {
     const dayEntries = entries.filter((e) => e.day === i + 1);
     const avg = dayEntries.length
-      ? Math.round(dayEntries.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / dayEntries.length) : 0;
+      ? Math.round((dayEntries.filter(e => e.statut === "done").length / dayEntries.length) * 100) : 0;
     return { day: d.slice(0, 3), avancement: avg, "Terminée": dayEntries.filter((e) => e.statut === "done").length };
   });
 
