@@ -233,8 +233,13 @@ function FichePage() {
           return (
             <TabsContent key={d} value={String(day)} className="mt-6 space-y-4">
               {dayEntries.length === 0 && (
-                <Card className="p-10 rounded-2xl border-dashed border-2 text-center text-muted-foreground">
-                  Aucune tâche pour {d}. Ajoutez la première.
+                <Card className="p-10 rounded-2xl border-dashed border-2 text-center text-muted-foreground flex flex-col items-center gap-4">
+                  <p>Aucune tâche pour {d}. Ajoutez la première.</p>
+                  {!submitted && (
+                    <Button variant="outline" size="sm" onClick={() => addRow(day)}>
+                      <Plus className="h-4 w-4 mr-2" /> Ajouter la 1ère tâche
+                    </Button>
+                  )}
                 </Card>
               )}
               {dayEntries.map((entry) => (
