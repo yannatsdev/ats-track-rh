@@ -469,7 +469,7 @@ export const generateAIBilan = createServerFn({ method: "POST" })
     const notes = notesRes.data ?? [];
 
     const summary = {
-      taches: entries.map(e => ({ day: e.day, tache: e.tache, statut: e.statut, resultat: e.resultat })),
+      taches: entries.map(e => ({ day: e.day, tache: e.tache, statut: e.statut, resultat: e.resultat, motif_pause: e.motif_pause })),
       notes: notes.map(n => ({ day: n.day, difficultes: n.difficultes, observations: n.observations, motif_report: n.motif_report }))
     };
 
@@ -479,9 +479,9 @@ export const generateAIBilan = createServerFn({ method: "POST" })
     const system = `Tu es un assistant RH. Ta mission est d'agréger les tâches journalières d'un employé pour générer un bilan hebdomadaire structuré.
 Retourne UNIQUEMENT du JSON strict : { "realisations": string, "dossiers": string, "difficultes": string, "actions": string }
 - realisations : Synthèse des tâches "done".
-- dossiers : Synthèse des tâches "in_progress".
-- difficultes : Agrégation des difficultés et motifs de report.
-- actions : Déductions pour la semaine prochaine basées sur le travail en cours.
+- dossiers : Synthèse des tâches "in_progress", "paused" (suspendues) et "blocked" (bloquées). Mentionne explicitement les blocages.
+- difficultes : Agrégation des difficultés, motifs de report, suspensions et blocages.
+- actions : Déductions pour la semaine prochaine basées sur le travail en cours ou bloqué.
 Sois concis et professionnel.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
