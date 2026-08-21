@@ -43,7 +43,6 @@ export const upsertDailyEntry = createServerFn({ method: "POST" })
       resultat: z.string().optional().default(""),
       statut: z.enum(["done", "in_progress", "postponed"]),
       motif_report: z.string().optional().default(""),
-      avancement_pct: z.number().int().min(0).max(100),
       position: z.number().int().default(0),
     }).parse(d),
   )

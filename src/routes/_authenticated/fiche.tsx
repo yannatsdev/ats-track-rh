@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/fiche")({
 
 type Entry = {
   id?: string; sheet_id: string; day: number; heure: string; tache: string;
-  resultat: string; statut: Statut; motif_report: string; avancement_pct: number; position: number;
+  resultat: string; statut: Statut; motif_report: string; position: number;
 };
 type DayNote = {
   id?: string; sheet_id: string; day: number;
@@ -75,10 +75,9 @@ function FichePage() {
   const completion = Math.round((daysWithData.size / 5) * 100);
 
   const dayStatus = (d: number) => {
-    const dayEntries = entries.filter((e) => e.day === d);
-    const hasRealTask = dayEntries.some((e) => e.tache.trim().length > 0);
-    if (!hasRealTask) return "empty";
-    const allDone = dayEntries.every((e) => e.statut === "done" || e.avancement_pct === 100);
+    const dayEntries = entries.filter((e) => e.day === d && e.tache.trim().length > 0);
+    if (dayEntries.length === 0) return "empty";
+    const allDone = dayEntries.every((e) => e.statut === "done");
     return allDone ? "complete" : "in_progress";
   };
 
@@ -88,7 +87,7 @@ function FichePage() {
     try {
       await upsert({ data: {
         sheet_id: sheet.id, day, heure: "", tache: "", resultat: "",
-        statut: "in_progress", motif_report: "", avancement_pct: 0,
+        statut: "in_progress", motif_report: "",
         position: entries.filter((e) => e.day === day).length,
       }});
       await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
@@ -404,10 +403,24 @@ function DayNoteCard({
   onSave: (p: { sheet_id: string; day: number; motif_report: string; avancement_pct: number; difficultes: string; observations: string }) => Promise<void>;
 }) {
   const [motif, setMotif] = useState(initial?.motif_report ?? "");
-  const [avc, setAvc] = useState<number>(initial?.avancement_pct ?? 0);
+  const entries = (useQueryClient().getQueryData(["current-sheet", isoWeekStart()]) as any)?.entries || [];
+  const dayEntries = (entries as any[]).filter(e => e.day === day && e.tache.trim().length > 0);
+  const calculatedAvc = dayEntries.length 
+    ? Math.round((dayEntries.filter(e => e.statut === "done").length / dayEntries.length) * 100)
+    : 0;
+
+  const [motif, setMotif] = useState(initial?.motif_report ?? "");
   const [diff, setDiff] = useState(initial?.difficultes ?? "");
   const [obs, setObs] = useState(initial?.observations ?? "");
-  const commit = () => onSave({ sheet_id: sheetId, day, motif_report: motif, avancement_pct: avc, difficultes: diff, observations: obs });
+  
+  const commit = () => onSave({ 
+    sheet_id: sheetId, 
+    day, 
+    motif_report: motif, 
+    avancement_pct: calculatedAvc, 
+    difficultes: diff, 
+    observations: obs 
+  });
   return (
     <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] space-y-4">
       <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Notes du jour</div>
