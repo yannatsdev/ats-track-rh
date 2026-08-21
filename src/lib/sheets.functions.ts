@@ -507,3 +507,14 @@ Ce bilan sera relu par l'employé avant validation. Sois précis et professionne
       actions: content.actions ?? "",
     };
   });
+
+export const reportTaskToNextDay = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: result, error } = await supabase.rpc("report_task_to_next_day", { _task_id: data.id });
+    if (error) throw error;
+    if (!result) throw new Error("Impossible de reporter la tâche.");
+    return { id: result };
+  });
