@@ -30,11 +30,12 @@ function Dashboard() {
   const ongoing = entries.filter((e) => e.statut === "in_progress").length;
   const postponed = entries.filter((e) => e.statut === "postponed").length;
   const total = Math.max(entries.length, 1);
+  const globalProgress = data?.sheet?.avancement_global ?? Math.round((done / total) * 100);
 
   const dayData = DAY_LABELS.map((d, i) => {
     const dayEntries = entries.filter((e) => e.day === i + 1);
     const avg = dayEntries.length
-      ? Math.round(dayEntries.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / dayEntries.length) : 0;
+      ? Math.round((dayEntries.filter(e => e.statut === "done").length / dayEntries.length) * 100) : 0;
     return { day: d.slice(0, 3), avancement: avg, "Terminée": dayEntries.filter((e) => e.statut === "done").length };
   });
 
@@ -56,9 +57,9 @@ function Dashboard() {
         }
       />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <KpiRingCard label="Progression globale" value={globalProgress} percent={globalProgress} suffix="%" delta={0} color="oklch(0.72 0.14 74)" />
         <KpiRingCard label="Tâches terminées" value={done} percent={Math.round((done/total)*100)} delta={0} color="oklch(0.68 0.16 148)" />
-        <KpiRingCard label="Tâches en cours" value={ongoing} percent={Math.round((ongoing/total)*100)} delta={0} color="oklch(0.78 0.14 78)" />
-        <KpiRingCard label="Tâches reportées" value={postponed} percent={Math.round((postponed/total)*100)} delta={0} color="oklch(0.6 0.22 27)" />
+        <KpiRingCard label="Jours complétés" value={`${data?.dayNotes?.filter(n => n.observations || n.difficultes).length || 0}/5`} percent={Math.round(((data?.dayNotes?.filter(n => n.observations || n.difficultes).length || 0)/5)*100)} delta={0} color="oklch(0.78 0.14 78)" />
       </div>
       <Card className="mt-6 p-6 rounded-2xl border-0 shadow-[var(--shadow-card)]">
         <div className="flex items-start justify-between mb-4">

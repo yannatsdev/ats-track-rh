@@ -35,6 +35,9 @@ function ProfilPage() {
   const validated = sheets.filter((s) => s.status === "direction_validated" || s.status === "hr_validated").length;
   const submitted = sheets.filter((s) => s.status === "submitted").length;
   const drafts = sheets.filter((s) => s.status === "draft").length;
+  const avg = total > 0 
+    ? Math.round(sheets.reduce((acc, s) => acc + (s.avancement_global || 0), 0) / total) 
+    : 0;
 
   return (
     <div>
@@ -80,11 +83,12 @@ function ProfilPage() {
 
         <Card className="p-6 rounded-2xl border-0 shadow-[var(--shadow-card)] md:col-span-2">
           <h3 className="font-semibold mb-4">Activité</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Stat label="Fiches" value={total} />
             <Stat label="Validées" value={validated} tone="ok" />
             <Stat label="Soumises" value={submitted} tone="info" />
             <Stat label="Brouillons" value={drafts} tone="muted" />
+            <Stat label="Avc. moyen" value={avg} unit="%" />
           </div>
           <div className="mt-6">
             <div className="text-sm font-medium mb-2">Dernières fiches</div>
@@ -114,7 +118,7 @@ function ProfilPage() {
   );
 }
 
-function Stat({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "ok" | "info" | "muted" }) {
+function Stat({ label, value, tone = "default", unit = "" }: { label: string; value: number; tone?: "default" | "ok" | "info" | "muted"; unit?: string }) {
   const cls =
     tone === "ok" ? "text-emerald-600" :
     tone === "info" ? "text-blue-600" :
@@ -122,7 +126,7 @@ function Stat({ label, value, tone = "default" }: { label: string; value: number
   return (
     <div className="rounded-xl border p-3">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-semibold ${cls}`}>{value}</div>
+      <div className={`text-2xl font-semibold ${cls}`}>{value}{unit}</div>
     </div>
   );
 }

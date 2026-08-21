@@ -43,7 +43,6 @@ export const upsertDailyEntry = createServerFn({ method: "POST" })
       resultat: z.string().optional().default(""),
       statut: z.enum(["done", "in_progress", "postponed"]),
       motif_report: z.string().optional().default(""),
-      avancement_pct: z.number().int().min(0).max(100),
       position: z.number().int().default(0),
     }).parse(d),
   )
@@ -132,7 +131,7 @@ export const listAllEmployeesTracking = createServerFn({ method: "POST" })
     const { supabase } = context;
     const [profilesRes, sheetsRes, rolesRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("active", true),
-      supabase.from("weekly_sheets").select("*, daily_entries(day, statut, avancement_pct)")
+      supabase.from("weekly_sheets").select("*, daily_entries(day, statut)")
         .eq("week_start", data.weekStart),
       supabase.from("user_roles").select("user_id, role"),
     ]);
@@ -362,7 +361,7 @@ export const getCoachAdvice = createServerFn({ method: "POST" })
     });
 
     const avg = entries.length
-      ? Math.round(entries.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / entries.length)
+      ? Math.round((entries.filter(e => e.statut === 'done').length / entries.length) * 100)
       : 0;
     const summary = {
       employe: `${profile?.first_name ?? ""} ${profile?.last_name ?? ""} — ${profile?.fonction ?? "?"} / ${profile?.service ?? "?"}`,
@@ -377,11 +376,11 @@ export const getCoachAdvice = createServerFn({ method: "POST" })
         jour: d.label,
         nb_taches: d.tasks.length,
         avancement_moyen: d.tasks.length
-          ? Math.round(d.tasks.reduce((a, b) => a + (b.avancement_pct ?? 0), 0) / d.tasks.length)
+          ? Math.round((d.tasks.filter(e => e.statut === 'done').length / d.tasks.length) * 100)
           : 0,
         taches: d.tasks.map((t) => ({
           heure: t.heure, tache: t.tache, resultat: t.resultat,
-          statut: t.statut, avancement: t.avancement_pct, motif_report: t.motif_report,
+          statut: t.statut, resultats: t.resultat, motif_report: t.motif_report,
         })),
         note_du_jour: d.note ? {
           avancement: d.note.avancement_pct,
