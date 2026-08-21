@@ -21,6 +21,7 @@ export type Database = {
           day: number
           heure: string | null
           id: string
+          motif_pause: string | null
           motif_report: string | null
           position: number
           resultat: string | null
@@ -34,6 +35,7 @@ export type Database = {
           day: number
           heure?: string | null
           id?: string
+          motif_pause?: string | null
           motif_report?: string | null
           position?: number
           resultat?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           day?: number
           heure?: string | null
           id?: string
+          motif_pause?: string | null
           motif_report?: string | null
           position?: number
           resultat?: string | null
