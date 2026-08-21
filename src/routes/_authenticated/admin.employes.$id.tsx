@@ -149,23 +149,17 @@ function EmpSheet() {
                   ))}
                 </div>
               )}
-              {note && (note.motif_report || note.difficultes || note.observations) && (
-                <div className="grid gap-3 md:grid-cols-3 mt-4 pt-4 border-t text-sm">
+              {note && (note.motif_report || note.observations) && (
+                <div className="grid gap-3 md:grid-cols-2 mt-4 pt-4 border-t text-sm">
                   {note.motif_report && (
                     <div>
                       <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Motif du report</div>
                       <div>{note.motif_report}</div>
                     </div>
                   )}
-                  {note.difficultes && (
-                    <div>
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Difficultés</div>
-                      <div>{note.difficultes}</div>
-                    </div>
-                  )}
                   {note.observations && (
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Observations</div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Remarque additionnelle</div>
                       <div>{note.observations}</div>
                     </div>
                   )}

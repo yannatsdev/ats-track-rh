@@ -69,7 +69,7 @@ function Dashboard() {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <KpiRingCard label="Progression globale" value={globalProgress} percent={globalProgress} suffix="%" delta={0} color="oklch(0.72 0.14 74)" />
         <KpiRingCard label="Tâches terminées" value={done} percent={Math.round((doneMeaningful/total)*100)} delta={0} color="oklch(0.68 0.16 148)" />
-        <KpiRingCard label="Jours complétés" value={`${data?.dayNotes?.filter(n => n.observations || n.difficultes).length || 0}/5`} percent={Math.round(((data?.dayNotes?.filter(n => n.observations || n.difficultes).length || 0)/5)*100)} delta={0} color="oklch(0.78 0.14 78)" />
+        <KpiRingCard label="Jours complétés" value={`${data?.dayNotes?.filter(n => n.observations).length || 0}/5`} percent={Math.round(((data?.dayNotes?.filter(n => n.observations).length || 0)/5)*100)} delta={0} color="oklch(0.78 0.14 78)" />
       </div>
       <Card className="mt-6 p-6 rounded-2xl border-0 shadow-[var(--shadow-card)]">
         <div className="flex items-start justify-between mb-4">

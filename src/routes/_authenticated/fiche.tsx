@@ -69,7 +69,7 @@ function FichePage() {
     const days = new Set<number>();
     for (let i = 1; i <= 5; i++) {
       const hasRealTask = entries.some((e) => e.day === i && e.tache.trim().length > 0);
-      const hasNote = dayNotes.some((n) => n.day === i && (n.observations?.trim() || n.difficultes?.trim()));
+      const hasNote = dayNotes.some((n) => n.day === i && n.observations?.trim());
       if (hasRealTask || hasNote) days.add(i);
     }
     return days;
@@ -174,7 +174,7 @@ function FichePage() {
                 sheet={sheet}
                 entries={entries}
                 daysCount={daysWithData.size}
-                notesCount={dayNotes.filter(n => n.observations?.trim() || n.difficultes?.trim()).length}
+                notesCount={dayNotes.filter(n => n.observations?.trim()).length}
                 disabled={submitted || saving}
                 onConfirm={submitSheet}
               />
@@ -214,7 +214,7 @@ function FichePage() {
           <div className="w-px h-8 bg-border" />
           <div className="text-center">
             <div className="text-lg font-bold text-primary">
-              {dayNotes.filter(n => n.observations?.trim() || n.difficultes?.trim()).length}
+              {dayNotes.filter(n => n.observations?.trim()).length}
             </div>
             <div className="text-[10px] uppercase text-muted-foreground">Notes</div>
           </div>
@@ -392,7 +392,7 @@ function SubmitWithConfirmation({
 const BILAN_FIELDS = [
   { key: "bilan_realisations" as const, label: "Principales réalisations", placeholder: "Livrables clefs, succès, deals…" },
   { key: "bilan_dossiers" as const,     label: "Dossiers en cours",         placeholder: "Sujets ouverts, statut, échéance…" },
-  { key: "bilan_difficultes" as const,  label: "Difficultés rencontrées",   placeholder: "Points de blocage, dépendances…" },
+  
   { key: "bilan_actions" as const,      label: "Actions prévues (semaine prochaine)", placeholder: "Priorités, objectifs…" },
 ];
 
@@ -428,7 +428,7 @@ function BilanSection({
       const newValues = {
         bilan_realisations: result.realisations,
         bilan_dossiers: result.dossiers,
-        bilan_difficultes: result.difficultes,
+        
         bilan_actions: result.actions,
       };
       setValues(prev => ({ ...prev, ...newValues }));
@@ -497,7 +497,7 @@ function DayNoteCard({
     ? Math.round((nonPausedEntries.filter(e => e.statut === "done").length / nonPausedEntries.length) * 100)
     : 0;
 
-  const [diff, setDiff] = useState(initial?.difficultes ?? "");
+  const diff = initial?.difficultes ?? "";
   const [obs, setObs] = useState(initial?.observations ?? "");
   
   const commit = () => onSave({ 
@@ -534,12 +534,9 @@ function DayNoteCard({
         </div>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-xs">Difficultés rencontrées</Label>
-            <Textarea rows={3} value={diff} onChange={(e) => setDiff(e.target.value)} onBlur={commit} disabled={disabled} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs">Observations</Label>
-            <Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={commit} disabled={disabled} />
+            <Label className="text-xs">Remarque additionnelle</Label>
+            <Textarea rows={7} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={commit} disabled={disabled}
+              placeholder="Toute remarque utile sur la journée…" />
           </div>
         </div>
       </div>
@@ -570,9 +567,9 @@ function EntryRow({ entry, disabled, onSave, onDelete, onReport }: {
             onBlur={(e) => commit({ tache: e.target.value })} disabled={disabled} className="mt-1" placeholder="Ajouter une tâche..." />
         </div>
         <div>
-          <Label className="text-xs">Résultat obtenu</Label>
+          <Label className="text-xs">Observations</Label>
           <Input value={local.resultat} onChange={(e) => patch({ resultat: e.target.value })}
-            onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" placeholder="Résultat attendu / obtenu" />
+            onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" placeholder="Observations sur la tâche…" />
         </div>
         <div>
           <Label className="text-xs">Statut</Label>
@@ -664,7 +661,7 @@ function CoachCard({
   const postponed = entries.filter((e) => e.statut === "postponed");
   const notesMissing = [1, 2, 3, 4, 5]
     .filter((d) => d <= todayIdx && daysWithTasks.has(d))
-    .filter((d) => !dayNotes.find((n) => n.day === d && (n.observations || n.difficultes)));
+    .filter((d) => !dayNotes.find((n) => n.day === d && n.observations));
 
   if (submitted) {
     tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par le RH.");
@@ -679,7 +676,7 @@ function CoachCard({
       tips.push(`↩️ ${postponed.length} tâche(s) reportée(s) : indiquez un motif clair et replanifiez-les.`);
     }
     if (notesMissing.length) {
-      tips.push(`📝 Notes du jour manquantes pour : ${notesMissing.map((d) => DAY_LABELS[d - 1]).join(", ")}. Ajoutez difficultés et observations.`);
+      tips.push(`📝 Notes du jour manquantes pour : ${notesMissing.map((d) => DAY_LABELS[d - 1]).join(", ")}. Ajoutez une remarque additionnelle.`);
     }
     if (entries.length === 0) {
       tips.push("🚀 Commencez par lister 3 priorités du jour, puis affinez-les au fil de la journée.");
