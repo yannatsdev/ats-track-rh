@@ -534,12 +534,9 @@ function DayNoteCard({
         </div>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-xs">Difficultés rencontrées</Label>
-            <Textarea rows={3} value={diff} onChange={(e) => setDiff(e.target.value)} onBlur={commit} disabled={disabled} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs">Observations</Label>
-            <Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={commit} disabled={disabled} />
+            <Label className="text-xs">Remarque additionnelle</Label>
+            <Textarea rows={7} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={commit} disabled={disabled}
+              placeholder="Toute remarque utile sur la journée…" />
           </div>
         </div>
       </div>
