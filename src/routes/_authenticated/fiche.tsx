@@ -63,9 +63,9 @@ function FichePage() {
   const daysWithData = useMemo(() => {
     const days = new Set<number>();
     for (let i = 1; i <= 5; i++) {
-      const hasTask = entries.some((e) => e.day === i && e.tache.trim().length > 0 && e.tache !== "Nouvelle tâche");
+      const hasRealTask = entries.some((e) => e.day === i && e.tache.trim().length > 0);
       const hasNote = dayNotes.some((n) => n.day === i && (n.observations?.trim() || n.difficultes?.trim()));
-      if (hasTask || hasNote) days.add(i);
+      if (hasRealTask || hasNote) days.add(i);
     }
     return days;
   }, [entries, dayNotes]);
@@ -74,7 +74,7 @@ function FichePage() {
 
   const dayStatus = (d: number) => {
     const dayEntries = entries.filter((e) => e.day === d);
-    const hasRealTask = dayEntries.some((e) => e.tache.trim().length > 0 && e.tache !== "Nouvelle tâche");
+    const hasRealTask = dayEntries.some((e) => e.tache.trim().length > 0);
     if (!hasRealTask) return "empty";
     const allDone = dayEntries.every((e) => e.statut === "done" || e.avancement_pct === 100);
     return allDone ? "complete" : "in_progress";
