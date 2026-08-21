@@ -174,7 +174,7 @@ function FichePage() {
                 sheet={sheet}
                 entries={entries}
                 daysCount={daysWithData.size}
-                notesCount={dayNotes.filter(n => n.observations?.trim() || n.difficultes?.trim()).length}
+                notesCount={dayNotes.filter(n => n.observations?.trim()).length}
                 disabled={submitted || saving}
                 onConfirm={submitSheet}
               />
@@ -214,7 +214,7 @@ function FichePage() {
           <div className="w-px h-8 bg-border" />
           <div className="text-center">
             <div className="text-lg font-bold text-primary">
-              {dayNotes.filter(n => n.observations?.trim() || n.difficultes?.trim()).length}
+              {dayNotes.filter(n => n.observations?.trim()).length}
             </div>
             <div className="text-[10px] uppercase text-muted-foreground">Notes</div>
           </div>
