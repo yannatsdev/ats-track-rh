@@ -11,9 +11,9 @@ const CONFIG: Record<Statut, { label: string; className: string; dot: string }> 
 };
 
 export function StatusBadge({ statut }: { statut: Statut }) {
-  const c = CONFIG[statut];
+  const c = CONFIG[statut] || CONFIG.in_progress;
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border", c.className)}>
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border shrink-0", c.className)}>
       <span className={cn("h-1.5 w-1.5 rounded-full", c.dot)} />
       {c.label}
     </span>
