@@ -569,11 +569,27 @@ function EntryRow({ entry, disabled, onSave, onDelete, onReport }: {
             </SelectContent>
           </Select>
         </div>
-        <div className="pt-6">
+        <div className="pt-6 flex items-center gap-1">
+          {onReport && entry.id && (entry.statut === "in_progress" || entry.statut === "blocked" || entry.statut === "paused") && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={() => onReport(entry.id!)} disabled={disabled}
+                    className="text-muted-foreground hover:text-primary">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reporter à demain</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Button variant="ghost" size="icon" onClick={onDelete} disabled={disabled}
-            className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+            className="text-muted-foreground hover:text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+
       {local.statut === "postponed" && (
         <div className="mt-3">
           <Label className="text-xs">Motif du report</Label>
