@@ -403,13 +403,12 @@ function DayNoteCard({
   onSave: (p: { sheet_id: string; day: number; motif_report: string; avancement_pct: number; difficultes: string; observations: string }) => Promise<void>;
 }) {
   const [motif, setMotif] = useState(initial?.motif_report ?? "");
-  const entries = (useQueryClient().getQueryData(["current-sheet", isoWeekStart()]) as any)?.entries || [];
-  const dayEntries = (entries as any[]).filter(e => e.day === day && e.tache.trim().length > 0);
+  const entriesData = (useQueryClient().getQueryData(["current-sheet", isoWeekStart()]) as any)?.entries || [];
+  const dayEntries = (entriesData as any[]).filter(e => e.day === day && e.tache.trim().length > 0);
   const calculatedAvc = dayEntries.length 
     ? Math.round((dayEntries.filter(e => e.statut === "done").length / dayEntries.length) * 100)
     : 0;
 
-  const [motif, setMotif] = useState(initial?.motif_report ?? "");
   const [diff, setDiff] = useState(initial?.difficultes ?? "");
   const [obs, setObs] = useState(initial?.observations ?? "");
   
@@ -421,32 +420,37 @@ function DayNoteCard({
     difficultes: diff, 
     observations: obs 
   });
+
   return (
     <Card className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)] space-y-4">
       <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Notes du jour</div>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label className="text-xs">Motif du report de la tâche</Label>
-          <Input value={motif} onChange={(e) => setMotif(e.target.value)} onBlur={commit} disabled={disabled}
-            placeholder="Précisez le motif si une tâche est reportée…" />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Niveau d'avancement du jour</Label>
-            <span className="text-xs font-semibold text-primary">{avc}%</span>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs">Progression du jour (calculée)</Label>
+            <div className="flex items-center gap-3">
+              <Progress value={calculatedAvc} className="h-2 flex-1" />
+              <span className="text-xs font-bold text-primary w-8">{calculatedAvc}%</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">
+              Basée sur les tâches terminées ({dayEntries.filter(e => e.statut === "done").length}/{dayEntries.length})
+            </p>
           </div>
-          <Slider value={[avc]} onValueChange={([v]) => setAvc(v)} onValueCommit={commit}
-            max={100} step={5} disabled={disabled} />
+          <div className="space-y-2">
+            <Label className="text-xs">Motif du report de la tâche</Label>
+            <Input value={motif} onChange={(e) => setMotif(e.target.value)} onBlur={commit} disabled={disabled}
+              placeholder="Précisez le motif si une tâche est reportée…" />
+          </div>
         </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label className="text-xs">Difficultés rencontrées</Label>
-          <Textarea rows={3} value={diff} onChange={(e) => setDiff(e.target.value)} onBlur={commit} disabled={disabled} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs">Observations</Label>
-          <Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={commit} disabled={disabled} />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs">Difficultés rencontrées</Label>
+            <Textarea rows={3} value={diff} onChange={(e) => setDiff(e.target.value)} onBlur={commit} disabled={disabled} />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Observations</Label>
+            <Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={commit} disabled={disabled} />
+          </div>
         </div>
       </div>
     </Card>
@@ -456,9 +460,9 @@ function DayNoteCard({
 function EntryRow({ entry, disabled, onSave, onDelete }: {
   entry: Entry; disabled: boolean; onSave: (e: Entry) => void; onDelete: () => void;
 }) {
-  const [local, setLocal] = useState(entry);
+  const [local, setLocal] = useState({ ...entry });
   function patch(p: Partial<Entry>) { setLocal({ ...local, ...p }); }
-  function commit(p: Partial<Entry>) { const next = { ...local, ...p }; setLocal(next); onSave(next); }
+  function commit(p: Partial<Entry>) { const next = { ...local, ...p }; setLocal(next); onSave(next as Entry); }
   return (
     <Card className="p-4 rounded-2xl border shadow-sm">
       <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_150px_40px] items-start">
@@ -501,14 +505,6 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
             placeholder="Ex : ressource indisponible…" className="mt-1" />
         </div>
       )}
-      <div className="mt-4">
-        <div className="flex items-center justify-between text-xs mb-2">
-          <span className="text-muted-foreground">Niveau d'avancement</span>
-          <span className="font-semibold text-primary">{local.avancement_pct}%</span>
-        </div>
-        <Slider value={[local.avancement_pct]} onValueChange={([v]) => patch({ avancement_pct: v })}
-          onValueCommit={([v]) => commit({ avancement_pct: v })} max={100} step={5} disabled={disabled} />
-      </div>
     </Card>
   );
 }
@@ -538,7 +534,6 @@ function CoachCard({
   const todayIdx = dow >= 1 && dow <= 5 ? dow : 1;
   const daysWithTasks = new Set(entries.map((e) => e.day));
   const missingDays = [1, 2, 3, 4, 5].filter((d) => d <= todayIdx && !daysWithTasks.has(d));
-  const lowProgress = entries.filter((e) => e.avancement_pct < 50 && e.statut !== "done");
   const postponed = entries.filter((e) => e.statut === "postponed");
   const notesMissing = [1, 2, 3, 4, 5]
     .filter((d) => d <= todayIdx && daysWithTasks.has(d))
@@ -555,9 +550,6 @@ function CoachCard({
     }
     if (postponed.length) {
       tips.push(`↩️ ${postponed.length} tâche(s) reportée(s) : indiquez un motif clair et replanifiez-les.`);
-    }
-    if (lowProgress.length >= 3) {
-      tips.push("🎯 Plusieurs tâches sous 50%. Découpez-les en sous-étapes concrètes de 30–60 min pour avancer.");
     }
     if (notesMissing.length) {
       tips.push(`📝 Notes du jour manquantes pour : ${notesMissing.map((d) => DAY_LABELS[d - 1]).join(", ")}. Ajoutez difficultés et observations.`);
