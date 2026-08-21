@@ -267,8 +267,10 @@ function FichePage() {
               )}
               {dayEntries.map((entry) => (
                 <EntryRow key={entry.id} entry={entry} disabled={submitted}
-                  onSave={saveEntry} onDelete={() => deleteRow(entry.id)} />
+                  onSave={saveEntry} onDelete={() => deleteRow(entry.id)}
+                  onReport={handleReportTask} />
               ))}
+
               {!submitted && (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button variant="outline" onClick={() => addRow(day)} disabled={saving}
