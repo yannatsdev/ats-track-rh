@@ -328,6 +328,14 @@ function SubmitWithConfirmation({
   if (!incomplete) {
     return content;
   }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button disabled={disabled} className="font-semibold bg-primary/90 hover:bg-primary">
+          <Send className="h-4 w-4 mr-2" />Soumettre la fiche
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
