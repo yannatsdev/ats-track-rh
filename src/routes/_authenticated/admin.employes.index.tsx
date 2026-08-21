@@ -40,7 +40,7 @@ function EmployesPage() {
     const sheets = data?.sheets ?? [];
     return profiles.map((p) => {
       const sheet = sheets.find((s) => s.user_id === p.id);
-      const entries = ((sheet?.daily_entries ?? []) as { statut: string; tache: string }[]).filter(e => (e.tache || "").trim().length > 0);
+      const entries = ((sheet?.daily_entries ?? []) as any[]).filter(e => (e.tache || "").trim().length > 0);
       const done = entries.filter((e) => e.statut === "done").length;
       const ongoing = entries.filter((e) => e.statut === "in_progress").length;
       const paused = entries.filter((e) => e.statut === "paused").length;
