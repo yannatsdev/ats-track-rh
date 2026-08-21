@@ -1,0 +1,1 @@
+UPDATE public.profiles SET fonction = 'RH' WHERE id = '1e5f0327-4fc7-4374-9772-cf8cab74fe73';
