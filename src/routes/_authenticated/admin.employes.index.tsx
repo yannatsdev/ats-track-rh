@@ -44,7 +44,8 @@ function EmployesPage() {
       const done = entries.filter((e) => e.statut === "done").length;
       const ongoing = entries.filter((e) => e.statut === "in_progress").length;
       const postponed = entries.filter((e) => e.statut === "postponed").length;
-      const avg = entries.length ? Math.round((done / entries.length) * 100) : 0;
+      // Use pre-calculated global progress from sheet if available, otherwise calculate from entries
+      const avg = sheet?.avancement_global ?? (entries.length ? Math.round((done / entries.length) * 100) : 0);
       return { profile: p, sheet, done, ongoing, postponed, avg };
     }).filter((r) => {
       const name = `${r.profile.first_name ?? ""} ${r.profile.last_name ?? ""}`.toLowerCase();

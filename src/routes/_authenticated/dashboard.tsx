@@ -30,6 +30,7 @@ function Dashboard() {
   const ongoing = entries.filter((e) => e.statut === "in_progress").length;
   const postponed = entries.filter((e) => e.statut === "postponed").length;
   const total = Math.max(entries.length, 1);
+  const globalProgress = data?.sheet?.avancement_global ?? Math.round((done / total) * 100);
 
   const dayData = DAY_LABELS.map((d, i) => {
     const dayEntries = entries.filter((e) => e.day === i + 1);
@@ -56,7 +57,7 @@ function Dashboard() {
         }
       />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiRingCard label="Tâches terminées" value={done} percent={Math.round((done/total)*100)} delta={0} color="oklch(0.68 0.16 148)" />
+        <KpiRingCard label="Tâches terminées" value={done} percent={globalProgress} delta={0} color="oklch(0.68 0.16 148)" />
         <KpiRingCard label="Tâches en cours" value={ongoing} percent={Math.round((ongoing/total)*100)} delta={0} color="oklch(0.78 0.14 78)" />
         <KpiRingCard label="Tâches reportées" value={postponed} percent={Math.round((postponed/total)*100)} delta={0} color="oklch(0.6 0.22 27)" />
       </div>
