@@ -570,12 +570,7 @@ function EntryRow({ entry, disabled, onSave, onDelete, onReport }: {
             onBlur={(e) => commit({ tache: e.target.value })} disabled={disabled} className="mt-1" placeholder="Ajouter une tâche..." />
         </div>
         <div>
-          <Label className="text-xs">
-            '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-                                        
-                                            
-                                            enlleve resultat obtenu
-          </Label>
+          <Label className="text-xs">Résultat obtenu</Label>
           <Input value={local.resultat} onChange={(e) => patch({ resultat: e.target.value })}
             onBlur={(e) => commit({ resultat: e.target.value })} disabled={disabled} className="mt-1" placeholder="Résultat attendu / obtenu" />
         </div>
