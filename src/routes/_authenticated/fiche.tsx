@@ -80,7 +80,8 @@ function FichePage() {
     if (dayEntries.length === 0) return "empty";
     const allDone = dayEntries.every((e) => e.statut === "done");
     const anyPaused = dayEntries.some((e) => e.statut === "paused");
-    return allDone ? "complete" : anyPaused ? "paused" : "in_progress";
+    const anyBlocked = dayEntries.some((e) => e.statut === "blocked");
+    return allDone ? "complete" : anyBlocked ? "blocked" : anyPaused ? "paused" : "in_progress";
   };
 
   async function addRow(day: number) {
@@ -216,6 +217,8 @@ function FichePage() {
                 <div className="flex flex-col items-center">
                   {status === "complete" ? (
                     <Check className="h-3 w-3 text-emerald-500" />
+                  ) : status === "blocked" ? (
+                    <Circle className="h-2 w-2 fill-red-500 text-red-500" />
                   ) : status === "paused" ? (
                     <Circle className="h-2 w-2 fill-slate-400 text-slate-400" />
                   ) : status === "in_progress" ? (
@@ -576,6 +579,13 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
             placeholder="Ex : ressource indisponible…" className="mt-1" />
         </div>
       )}
+      {local.statut === "blocked" && (
+        <div className="mt-3">
+          <Label className="text-xs">Motif du blocage</Label>
+          <Input value={local.motif_pause} onChange={(e) => patch({ motif_pause: e.target.value })}
+            onBlur={(e) => commit({ motif_pause: e.target.value })} disabled={disabled}
+            placeholder="Ex : ressource manquante, en attente de validation externe…" className="mt-1" />
+        </div>
       {local.statut === "paused" && (
         <div className="mt-3">
           <Label className="text-xs">Motif de la suspension</Label>
