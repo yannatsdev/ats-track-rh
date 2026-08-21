@@ -465,7 +465,7 @@ export type Database = {
         | "hr_validated"
         | "direction_validated"
         | "rejected"
-      task_status: "done" | "in_progress" | "postponed"
+      task_status: "done" | "in_progress" | "postponed" | "paused" | "blocked"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -609,7 +609,7 @@ export const Constants = {
         "direction_validated",
         "rejected",
       ],
-      task_status: ["done", "in_progress", "postponed"],
+      task_status: ["done", "in_progress", "postponed", "paused", "blocked"],
     },
   },
 } as const
