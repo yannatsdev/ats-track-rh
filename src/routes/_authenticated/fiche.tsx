@@ -45,6 +45,8 @@ function FichePage() {
   const remove = useServerFn(deleteDailyEntry);
   const update = useServerFn(updateSheet);
   const upsertNote = useServerFn(upsertDayNote);
+  const report = useServerFn(reportTaskToNextDay);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["current-sheet", weekStart],
