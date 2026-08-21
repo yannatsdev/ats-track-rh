@@ -436,7 +436,9 @@ function DayNoteCard({
               <span className="text-xs font-bold text-primary w-8">{calculatedAvc}%</span>
             </div>
             <p className="text-[10px] text-muted-foreground italic">
-              Basée sur les tâches terminées ({dayEntries.filter(e => e.statut === "done").length}/{dayEntries.length})
+              {dayEntries.length > 0
+                ? `Basée sur les tâches terminées (${dayEntries.filter(e => e.statut === "done").length}/${dayEntries.length})`
+                : "Aucune tâche pour l'instant"}
             </p>
           </div>
           <div className="space-y-2">
