@@ -471,18 +471,18 @@ export const generateAIBilan = createServerFn({ method: "POST" })
 
     const summary = {
       taches: entries.map(e => ({ day: e.day, tache: e.tache, statut: e.statut, resultat: e.resultat, motif_pause: e.motif_pause })),
-      notes: notes.map(n => ({ day: n.day, difficultes: n.difficultes, observations: n.observations, motif_report: n.motif_report }))
+      notes: notes.map(n => ({ day: n.day, remarque_additionnelle: n.observations, motif_report: n.motif_report }))
     };
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("IA indisponible.");
 
     const system = `Tu es un assistant RH. Ta mission est d'agréger les tâches journalières d'un employé pour générer un bilan hebdomadaire structuré.
-Retourne UNIQUEMENT du JSON strict : { "realisations": string, "dossiers": string, "difficultes": string, "actions": string }
+Retourne UNIQUEMENT du JSON strict : { "realisations": string, "dossiers": string, "actions": string }
+Base-toi sur les tâches, le champ "resultat" (observations de la tâche) et les "remarque_additionnelle" des notes du jour.
 - realisations : Synthèse des tâches "done".
 - dossiers : Synthèse des tâches "in_progress", "paused" (suspendues) et "blocked" (bloquées). Mentionne explicitement les blocages et les suspensions.
-- difficultes : Agrégation des difficultés, motifs de report, suspensions et blocages. Sois factuel.
-- actions : Déductions pour la semaine prochaine basées sur le travail en cours, bloqué ou suspendu.
+- actions : Déductions pour la semaine prochaine basées sur le travail en cours, bloqué ou suspendu, en intégrant les points de blocage à traiter.
 Ce bilan sera relu par l'employé avant validation. Sois précis et professionnel.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -503,7 +503,6 @@ Ce bilan sera relu par l'employé avant validation. Sois précis et professionne
     return {
       realisations: content.realisations ?? "",
       dossiers: content.dossiers ?? "",
-      difficultes: content.difficultes ?? "",
       actions: content.actions ?? "",
     };
   });
