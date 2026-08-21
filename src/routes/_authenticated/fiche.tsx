@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
-  getCoachAdvice, requestSheetEdit, generateAIBilan,
+  getCoachAdvice, requestSheetEdit, generateAIBilan, reportTaskToNextDay,
 } from "@/lib/sheets.functions";
 import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
 
