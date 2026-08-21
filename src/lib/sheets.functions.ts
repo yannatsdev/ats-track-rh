@@ -388,14 +388,12 @@ export const getCoachAdvice = createServerFn({ method: "POST" })
         note_du_jour: d.note ? {
           avancement: d.note.avancement_pct,
           motif_report: d.note.motif_report,
-          difficultes: d.note.difficultes,
-          observations: d.note.observations,
+          remarque_additionnelle: d.note.observations,
         } : null,
       })),
       bilan: {
         realisations: sheet.bilan_realisations,
         dossiers: sheet.bilan_dossiers,
-        difficultes: sheet.bilan_difficultes,
         actions: sheet.bilan_actions,
       },
     };
