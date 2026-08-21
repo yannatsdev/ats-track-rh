@@ -1,4 +1,4 @@
 '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            je n arrive pas a login la page reste bloquer en login sans suite
+                                            'accès de Miss Davilla (davillarh1@gmail.com / Davilla@Lys26 quand je clique se connecter rien ne se passe
