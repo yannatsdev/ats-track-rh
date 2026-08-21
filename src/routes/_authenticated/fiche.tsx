@@ -529,9 +529,11 @@ function DayNoteCard({
   );
 }
 
-function EntryRow({ entry, disabled, onSave, onDelete }: {
+function EntryRow({ entry, disabled, onSave, onDelete, onReport }: {
   entry: Entry; disabled: boolean; onSave: (e: Entry) => void; onDelete: () => void;
+  onReport?: (id: string) => Promise<void>;
 }) {
+
   const [local, setLocal] = useState({ ...entry });
   function patch(p: Partial<Entry>) { setLocal({ ...local, ...p }); }
   function commit(p: Partial<Entry>) { const next = { ...local, ...p }; setLocal(next); onSave(next as Entry); }
