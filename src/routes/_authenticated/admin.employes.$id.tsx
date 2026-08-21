@@ -106,9 +106,11 @@ function EmpSheet() {
             <Card key={d} className="p-5 rounded-2xl border-0 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between mb-3">
                 <div className="font-semibold">{d}</div>
-                {note && (
+                {entries.filter(e => e.day === day && e.tache.trim().length > 0).length > 0 && (
                   <div className="text-xs text-muted-foreground">
-                    Avancement du jour : <span className="font-semibold text-primary">{note.avancement_pct}%</span>
+                    Avancement du jour : <span className="font-semibold text-primary">
+                      {Math.round((entries.filter(e => e.day === day && e.statut === "done").length / entries.filter(e => e.day === day && e.tache.trim().length > 0).length) * 100)}%
+                    </span>
                   </div>
                 )}
               </div>
