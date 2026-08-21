@@ -586,6 +586,7 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
             onBlur={(e) => commit({ motif_pause: e.target.value })} disabled={disabled}
             placeholder="Ex : ressource manquante, en attente de validation externe…" className="mt-1" />
         </div>
+      )}
       {local.statut === "paused" && (
         <div className="mt-3">
           <Label className="text-xs">Motif de la suspension</Label>
