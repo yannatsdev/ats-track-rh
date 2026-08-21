@@ -13,13 +13,13 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge, type Statut } from "@/components/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock, Circle, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Check, Send, Loader2, Sparkles, Save, Unlock, Lightbulb, CalendarClock, Circle, AlertCircle, ArrowRight, Tag } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
   getOrCreateCurrentSheet, upsertDailyEntry, deleteDailyEntry, updateSheet, upsertDayNote,
-  getCoachAdvice, requestSheetEdit, generateAIBilan,
+  getCoachAdvice, requestSheetEdit, generateAIBilan, reportTaskToNextDay,
 } from "@/lib/sheets.functions";
 import { isoWeekStart, formatWeekRange, DAY_LABELS } from "@/lib/week";
 
@@ -45,6 +45,8 @@ function FichePage() {
   const remove = useServerFn(deleteDailyEntry);
   const update = useServerFn(updateSheet);
   const upsertNote = useServerFn(upsertDayNote);
+  const report = useServerFn(reportTaskToNextDay);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["current-sheet", weekStart],
@@ -111,6 +113,20 @@ function FichePage() {
     await remove({ data: { id } });
     await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
   }
+
+  async function handleReportTask(id: string) {
+    setSaving(true);
+    try {
+      await report({ data: { id } });
+      toast.success("Tâche reportée avec succès");
+      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
 
   async function submitSheet() {
     if (!sheet) return;
@@ -251,8 +267,10 @@ function FichePage() {
               )}
               {dayEntries.map((entry) => (
                 <EntryRow key={entry.id} entry={entry} disabled={submitted}
-                  onSave={saveEntry} onDelete={() => deleteRow(entry.id)} />
+                  onSave={saveEntry} onDelete={() => deleteRow(entry.id)}
+                  onReport={handleReportTask} />
               ))}
+
               {!submitted && (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button variant="outline" onClick={() => addRow(day)} disabled={saving}
@@ -529,15 +547,18 @@ function DayNoteCard({
   );
 }
 
-function EntryRow({ entry, disabled, onSave, onDelete }: {
+function EntryRow({ entry, disabled, onSave, onDelete, onReport }: {
   entry: Entry; disabled: boolean; onSave: (e: Entry) => void; onDelete: () => void;
+  onReport?: (id: string) => Promise<void>;
 }) {
+
   const [local, setLocal] = useState({ ...entry });
   function patch(p: Partial<Entry>) { setLocal({ ...local, ...p }); }
   function commit(p: Partial<Entry>) { const next = { ...local, ...p }; setLocal(next); onSave(next as Entry); }
   return (
-    <Card className="p-4 rounded-2xl border shadow-sm">
-      <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_180px_40px] items-start">
+    <Card className="p-4 rounded-2xl border shadow-sm relative overflow-hidden">
+      <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_180px_80px] items-start">
+
         <div>
           <Label className="text-xs">Heure</Label>
           <Input value={local.heure} onChange={(e) => patch({ heure: e.target.value })}
@@ -566,11 +587,27 @@ function EntryRow({ entry, disabled, onSave, onDelete }: {
             </SelectContent>
           </Select>
         </div>
-        <div className="pt-6">
+        <div className="pt-6 flex items-center gap-1">
+          {onReport && entry.id && (entry.statut === "in_progress" || entry.statut === "blocked" || entry.statut === "paused") && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={() => onReport(entry.id!)} disabled={disabled}
+                    className="text-muted-foreground hover:text-primary">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reporter à demain</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Button variant="ghost" size="icon" onClick={onDelete} disabled={disabled}
-            className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+            className="text-muted-foreground hover:text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+
       {local.statut === "postponed" && (
         <div className="mt-3">
           <Label className="text-xs">Motif du report</Label>

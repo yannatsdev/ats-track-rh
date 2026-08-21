@@ -31,9 +31,13 @@ function Dashboard() {
   const paused = entries.filter((e) => e.statut === "paused").length;
   const blocked = entries.filter((e) => e.statut === "blocked").length;
   const postponed = entries.filter((e) => e.statut === "postponed").length;
+  
   const meaningfulEntries = entries.filter(e => e.tache.trim().length > 0 && e.statut !== "paused");
+  const doneMeaningful = meaningfulEntries.filter(e => e.statut === "done").length;
   const total = Math.max(meaningfulEntries.length, 1);
-  const globalProgress = data?.sheet?.avancement_global ?? Math.round((done / total) * 100);
+  const calculatedProgress = Math.round((doneMeaningful / total) * 100);
+  const globalProgress = data?.sheet?.avancement_global ?? calculatedProgress;
+
 
   const dayData = DAY_LABELS.map((d, i) => {
     const dayEntries = entries.filter((e) => e.day === i + 1 && e.tache.trim().length > 0);
@@ -64,7 +68,7 @@ function Dashboard() {
       />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <KpiRingCard label="Progression globale" value={globalProgress} percent={globalProgress} suffix="%" delta={0} color="oklch(0.72 0.14 74)" />
-        <KpiRingCard label="Tâches terminées" value={done} percent={Math.round((done/total)*100)} delta={0} color="oklch(0.68 0.16 148)" />
+        <KpiRingCard label="Tâches terminées" value={done} percent={Math.round((doneMeaningful/total)*100)} delta={0} color="oklch(0.68 0.16 148)" />
         <KpiRingCard label="Jours complétés" value={`${data?.dayNotes?.filter(n => n.observations || n.difficultes).length || 0}/5`} percent={Math.round(((data?.dayNotes?.filter(n => n.observations || n.difficultes).length || 0)/5)*100)} delta={0} color="oklch(0.78 0.14 78)" />
       </div>
       <Card className="mt-6 p-6 rounded-2xl border-0 shadow-[var(--shadow-card)]">

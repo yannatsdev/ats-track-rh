@@ -48,9 +48,11 @@ function EmpSheet() {
 
   const { sheet, entries, profile, validations, dayNotes } = data;
   const meaningfulEntries = entries.filter(e => e.tache.trim().length > 0 && e.statut !== "paused");
+  const doneMeaningful = meaningfulEntries.filter(e => e.statut === "done").length;
   const globalProgress = meaningfulEntries.length 
-    ? Math.round((meaningfulEntries.filter(e => e.statut === "done").length / meaningfulEntries.length) * 100)
+    ? Math.round((doneMeaningful / meaningfulEntries.length) * 100)
     : 0;
+
   const canHR = me.roles.includes("hr") || me.roles.includes("admin");
   const canDir = me.roles.includes("direction") || me.roles.includes("admin");
   const showCoach = me.roles.includes("direction") || me.roles.includes("admin");

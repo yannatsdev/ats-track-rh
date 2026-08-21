@@ -412,6 +412,7 @@ Règles strictes :
 - Format : { "resume": string (1 phrase factuelle sur ce qui a été fait), "score": number (0-100, basé sur l'avancement réel), "priorites": string[] (0-4 actions concrètes UNIQUEMENT si utile ; sinon []), "risques": string[] (0-3 points UNIQUEMENT s'il y a un vrai signal ; sinon []), "encouragement": string (1 phrase, dis "Bravo" quand l'avancement est bon) }
 - INTERDIT : conseils génériques, banalités, remplissage. Si tout va bien, "priorites" et "risques" doivent être des tableaux vides [] et l'encouragement doit féliciter explicitement.
 - Ne mentionne un risque QUE s'il est visible dans les données : tâche à faible avancement, tâche reportée sans motif, journée travaillée sans tâche, note du jour vide alors que des difficultés sont probables, tâche en statut "paused" (suspendue) sans motif ou depuis plusieurs jours.
+- DÉTECTION DE PATTERNS : si tu vois plusieurs jours de suite avec peu de tâches ou si les tâches sont concentrées le vendredi, mentionne-le avec bienveillance dans "risques".
 - Si des tâches sont suspendues ("paused") : suggère de les clôturer ou de les reporter si elles ne sont plus prioritaires dans "priorites".
 - Ne recommande une priorité QUE si elle cible une tâche précise (cite-la brièvement) ou un manque précis.
 - Si aucune tâche n'a été saisie du tout : resume factuel, score 0, une seule priorité = "Commencer à saisir les tâches de la semaine", pas de faux risques.
@@ -479,10 +480,10 @@ export const generateAIBilan = createServerFn({ method: "POST" })
     const system = `Tu es un assistant RH. Ta mission est d'agréger les tâches journalières d'un employé pour générer un bilan hebdomadaire structuré.
 Retourne UNIQUEMENT du JSON strict : { "realisations": string, "dossiers": string, "difficultes": string, "actions": string }
 - realisations : Synthèse des tâches "done".
-- dossiers : Synthèse des tâches "in_progress", "paused" (suspendues) et "blocked" (bloquées). Mentionne explicitement les blocages.
-- difficultes : Agrégation des difficultés, motifs de report, suspensions et blocages.
-- actions : Déductions pour la semaine prochaine basées sur le travail en cours ou bloqué.
-Sois concis et professionnel.`;
+- dossiers : Synthèse des tâches "in_progress", "paused" (suspendues) et "blocked" (bloquées). Mentionne explicitement les blocages et les suspensions.
+- difficultes : Agrégation des difficultés, motifs de report, suspensions et blocages. Sois factuel.
+- actions : Déductions pour la semaine prochaine basées sur le travail en cours, bloqué ou suspendu.
+Ce bilan sera relu par l'employé avant validation. Sois précis et professionnel.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -505,4 +506,15 @@ Sois concis et professionnel.`;
       difficultes: content.difficultes ?? "",
       actions: content.actions ?? "",
     };
+  });
+
+export const reportTaskToNextDay = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: result, error } = await supabase.rpc("report_task_to_next_day", { _task_id: data.id });
+    if (error) throw error;
+    if (!result) throw new Error("Impossible de reporter la tâche.");
+    return { id: result };
   });

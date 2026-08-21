@@ -67,6 +67,36 @@ export type Database = {
           },
         ]
       }
+      daily_entry_tags: {
+        Row: {
+          entry_id: string
+          tag_id: string
+        }
+        Insert: {
+          entry_id: string
+          tag_id: string
+        }
+        Update: {
+          entry_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_entry_tags_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "daily_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_entry_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       day_notes: {
         Row: {
           avancement_pct: number
@@ -308,6 +338,27 @@ export type Database = {
           },
         ]
       }
+      tags: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -449,6 +500,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      report_task_to_next_day: { Args: { _task_id: string }; Returns: string }
     }
     Enums: {
       app_role: "employee" | "hr" | "direction" | "admin"
@@ -465,6 +517,7 @@ export type Database = {
         | "hr_validated"
         | "direction_validated"
         | "rejected"
+        | "closed"
       task_status: "done" | "in_progress" | "postponed" | "paused" | "blocked"
     }
     CompositeTypes: {
@@ -608,6 +661,7 @@ export const Constants = {
         "hr_validated",
         "direction_validated",
         "rejected",
+        "closed",
       ],
       task_status: ["done", "in_progress", "postponed", "paused", "blocked"],
     },
