@@ -52,6 +52,8 @@ function FichePage() {
 
   const [activeDay, setActiveDay] = useState(() => {
     const d = new Date().getDay();
+    // JS getDay returns 0 for Sunday, 5 for Friday.
+    // Our tabs are "1" to "5".
     return d >= 1 && d <= 5 ? String(d) : "1";
   });
   const [saving, setSaving] = useState(false);
@@ -176,7 +178,7 @@ function FichePage() {
       <div className="flex flex-wrap gap-4 mb-6">
         <Card className="flex-1 min-w-[240px] p-5 rounded-2xl border-0 shadow-[var(--shadow-card)]">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium">Progression de la semaine</div>
+            <div className="text-sm font-medium">Progression de la semaine (jours actifs)</div>
             <div className="text-sm font-bold text-primary">{completion}%</div>
           </div>
           <Progress value={completion} className="h-2" />
