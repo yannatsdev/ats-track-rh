@@ -40,13 +40,16 @@ function EmployesPage() {
     const sheets = data?.sheets ?? [];
     return profiles.map((p) => {
       const sheet = sheets.find((s) => s.user_id === p.id);
-      const entries = (sheet?.daily_entries ?? []) as { statut: string }[];
+      const entries = ((sheet?.daily_entries ?? []) as { statut: string; tache: string }[]).filter(e => (e.tache || "").trim().length > 0);
       const done = entries.filter((e) => e.statut === "done").length;
       const ongoing = entries.filter((e) => e.statut === "in_progress").length;
+      const paused = entries.filter((e) => e.statut === "paused").length;
+      const blocked = entries.filter((e) => e.statut === "blocked").length;
       const postponed = entries.filter((e) => e.statut === "postponed").length;
-      // Derived from entries to ensure real-time accuracy even if global field is stale
-      const avg = entries.length ? Math.round((done / entries.length) * 100) : (sheet?.avancement_global ?? 0);
-      return { profile: p, sheet, done, ongoing, postponed, avg };
+      // Exclure les suspendues du dénominateur
+      const meaningful = entries.filter(e => e.statut !== "paused");
+      const avg = meaningful.length ? Math.round((done / meaningful.length) * 100) : (sheet?.avancement_global ?? 0);
+      return { profile: p, sheet, done, ongoing, paused, blocked, postponed, avg };
     }).filter((r) => {
       const name = `${r.profile.first_name ?? ""} ${r.profile.last_name ?? ""}`.toLowerCase();
       return name.includes(q.toLowerCase()) || (r.profile.service ?? "").toLowerCase().includes(q.toLowerCase());
@@ -114,7 +117,7 @@ function EmployesPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-xs">
-                      <span className="text-emerald-600 font-medium">{r.done}</span> · <span className="text-amber-600 font-medium">{r.ongoing}</span> · <span className="text-red-500 font-medium">{r.postponed}</span>
+                      <span className="text-emerald-600 font-medium" title="Terminée">{r.done}</span> · <span className="text-amber-600 font-medium" title="En cours">{r.ongoing}</span> · <span className="text-slate-500 font-medium" title="Suspendue">{r.paused}</span> · <span className="text-red-500 font-medium" title="Reportée">{r.postponed}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <DropdownMenu>
