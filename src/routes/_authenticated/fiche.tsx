@@ -114,6 +114,20 @@ function FichePage() {
     await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
   }
 
+  async function handleReportTask(id: string) {
+    setSaving(true);
+    try {
+      await report({ data: { id } });
+      toast.success("Tâche reportée avec succès");
+      await qc.invalidateQueries({ queryKey: ["current-sheet", weekStart] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+
   async function submitSheet() {
     if (!sheet) return;
     const done = entries.filter((e) => e.statut === "done").length;
