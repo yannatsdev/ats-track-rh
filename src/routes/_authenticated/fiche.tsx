@@ -69,7 +69,7 @@ function FichePage() {
     const days = new Set<number>();
     for (let i = 1; i <= 5; i++) {
       const hasRealTask = entries.some((e) => e.day === i && e.tache.trim().length > 0);
-      const hasNote = dayNotes.some((n) => n.day === i && (n.observations?.trim() || n.difficultes?.trim()));
+      const hasNote = dayNotes.some((n) => n.day === i && n.observations?.trim());
       if (hasRealTask || hasNote) days.add(i);
     }
     return days;
@@ -661,7 +661,7 @@ function CoachCard({
   const postponed = entries.filter((e) => e.statut === "postponed");
   const notesMissing = [1, 2, 3, 4, 5]
     .filter((d) => d <= todayIdx && daysWithTasks.has(d))
-    .filter((d) => !dayNotes.find((n) => n.day === d && (n.observations || n.difficultes)));
+    .filter((d) => !dayNotes.find((n) => n.day === d && n.observations));
 
   if (submitted) {
     tips.push("✅ Fiche soumise. Vous pouvez toujours la rouvrir tant qu'elle n'est pas validée par le RH.");
@@ -676,7 +676,7 @@ function CoachCard({
       tips.push(`↩️ ${postponed.length} tâche(s) reportée(s) : indiquez un motif clair et replanifiez-les.`);
     }
     if (notesMissing.length) {
-      tips.push(`📝 Notes du jour manquantes pour : ${notesMissing.map((d) => DAY_LABELS[d - 1]).join(", ")}. Ajoutez difficultés et observations.`);
+      tips.push(`📝 Notes du jour manquantes pour : ${notesMissing.map((d) => DAY_LABELS[d - 1]).join(", ")}. Ajoutez une remarque additionnelle.`);
     }
     if (entries.length === 0) {
       tips.push("🚀 Commencez par lister 3 priorités du jour, puis affinez-les au fil de la journée.");
