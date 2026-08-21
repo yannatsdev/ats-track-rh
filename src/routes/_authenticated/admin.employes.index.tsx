@@ -40,11 +40,11 @@ function EmployesPage() {
     const sheets = data?.sheets ?? [];
     return profiles.map((p) => {
       const sheet = sheets.find((s) => s.user_id === p.id);
-      const entries = (sheet?.daily_entries ?? []) as { statut: string; avancement_pct: number }[];
+      const entries = (sheet?.daily_entries ?? []) as { statut: string }[];
       const done = entries.filter((e) => e.statut === "done").length;
       const ongoing = entries.filter((e) => e.statut === "in_progress").length;
       const postponed = entries.filter((e) => e.statut === "postponed").length;
-      const avg = entries.length ? Math.round(entries.reduce((a, b) => a + b.avancement_pct, 0) / entries.length) : 0;
+      const avg = entries.length ? Math.round((done / entries.length) * 100) : 0;
       return { profile: p, sheet, done, ongoing, postponed, avg };
     }).filter((r) => {
       const name = `${r.profile.first_name ?? ""} ${r.profile.last_name ?? ""}`.toLowerCase();
