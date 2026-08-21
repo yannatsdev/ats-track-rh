@@ -538,8 +538,9 @@ function EntryRow({ entry, disabled, onSave, onDelete, onReport }: {
   function patch(p: Partial<Entry>) { setLocal({ ...local, ...p }); }
   function commit(p: Partial<Entry>) { const next = { ...local, ...p }; setLocal(next); onSave(next as Entry); }
   return (
-    <Card className="p-4 rounded-2xl border shadow-sm">
-      <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_180px_40px] items-start">
+    <Card className="p-4 rounded-2xl border shadow-sm relative overflow-hidden">
+      <div className="grid gap-3 md:grid-cols-[100px_1fr_1fr_180px_80px] items-start">
+
         <div>
           <Label className="text-xs">Heure</Label>
           <Input value={local.heure} onChange={(e) => patch({ heure: e.target.value })}
