@@ -68,6 +68,9 @@ function AdminDashboard() {
   const ongoing = allEntries.filter((e) => e.statut === "in_progress").length;
   const postponed = allEntries.filter((e) => e.statut === "postponed").length;
   const totalEntries = Math.max(allEntries.length, 1);
+  const orgGlobalProgress = submittedSheets.length
+    ? Math.round(submittedSheets.reduce((acc, s) => acc + (s.avancement_global || 0), 0) / submittedSheets.length)
+    : 0;
 
   // Tendance réelle : nombre de tâches terminées par jour de la semaine
   const trendData = DAY_LABELS.map((d, i) => ({
@@ -117,7 +120,7 @@ function AdminDashboard() {
       />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <KpiRingCard label="Fiches soumises" value={`${submittedCount}/${sheetsTotal}`} percent={submissionRate} color="oklch(0.44 0.13 254)" />
-        <KpiRingCard label="Taux terminées" value={`${Math.round((done/totalEntries)*100)}%`} percent={Math.round((done/totalEntries)*100)} color="oklch(0.68 0.16 148)" />
+        <KpiRingCard label="Progression moy. (org)" value={`${orgGlobalProgress}%`} percent={orgGlobalProgress} color="oklch(0.68 0.16 148)" />
         <KpiRingCard
           label={isLatePeriod ? "Employés en retard" : "Fiches non soumises"}
           value={isLatePeriod ? late : notSubmitted}
@@ -204,10 +207,20 @@ function AdminDashboard() {
       </div>
 
       <Card className="mt-6 p-6 rounded-2xl border-0 shadow-[var(--shadow-card)]">
-        <h3 className="font-semibold mb-4">Tendance hebdomadaire (organisation)</h3>
+        <h3 className="font-semibold mb-4">Tendance de progression hebdomadaire (org.)</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData}>
+            <AreaChart data={DAY_LABELS.map((d, i) => {
+              const day = i + 1;
+              const relevantSheets = submittedSheets.filter(s => (s.daily_entries ?? []).some((e: any) => e.day === day && e.tache.trim().length > 0));
+              const dailyAvg = relevantSheets.length 
+                ? Math.round(relevantSheets.reduce((acc, s) => {
+                    const de = (s.daily_entries ?? []).filter((e: any) => e.day === day && e.tache.trim().length > 0);
+                    return acc + (de.length ? (de.filter((e: any) => e.statut === 'done').length / de.length) * 100 : 0);
+                  }, 0) / relevantSheets.length)
+                : 0;
+              return { day: d.slice(0, 3), val: dailyAvg };
+            })}>
               <defs>
                 <linearGradient id="gold2" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="oklch(0.78 0.14 78)" stopOpacity={0.6} />
